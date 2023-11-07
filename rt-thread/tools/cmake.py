@@ -65,6 +65,7 @@ def GenerateCFiles(env,project):
         cm_file.write("SET(CMAKE_SYSTEM_NAME Generic)\n")
         cm_file.write("SET(CMAKE_SYSTEM_PROCESSOR " + rtconfig.CPU +")\n")
         cm_file.write("#SET(CMAKE_VERBOSE_MAKEFILE ON)\n\n")
+        cm_file.write("set(CMAKE_EXPORT_COMPILE_COMMANDS ON)\n\n")
 
         cm_file.write("SET(CMAKE_C_COMPILER \""+ CC + "\")\n")
         cm_file.write("SET(CMAKE_ASM_COMPILER \""+ AS + "\")\n")
@@ -141,7 +142,7 @@ def GenerateCFiles(env,project):
             cm_file.write(")\n\n")
 
             cm_file.write("ADD_EXECUTABLE(${CMAKE_PROJECT_NAME}.elf ${PROJECT_SOURCES})\n")
-            cm_file.write("ADD_CUSTOM_COMMAND(TARGET ${CMAKE_PROJECT_NAME}.elf POST_BUILD \nCOMMAND ${CMAKE_OBJCOPY} -O binary ${CMAKE_PROJECT_NAME}.elf ${CMAKE_PROJECT_NAME}.bin COMMAND ${CMAKE_SIZE} ${CMAKE_PROJECT_NAME}.elf)")
+            cm_file.write("ADD_CUSTOM_COMMAND(TARGET ${CMAKE_PROJECT_NAME}.elf POST_BUILD \nCOMMAND ${CMAKE_OBJCOPY} -O binary ${CMAKE_PROJECT_NAME}.elf ${CMAKE_PROJECT_NAME}.bin)")
         elif rtconfig.CROSS_TOOL == 'keil':
             cm_file.write("ADD_EXECUTABLE(${CMAKE_PROJECT_NAME} ${PROJECT_SOURCES})\n")
             cm_file.write("ADD_CUSTOM_COMMAND(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD \nCOMMAND ${CMAKE_FROMELF} --bin ${CMAKE_PROJECT_NAME}.elf --output ${CMAKE_PROJECT_NAME}.bin COMMAND ${CMAKE_FROMELF} -z ${CMAKE_PROJECT_NAME}.elf)")
