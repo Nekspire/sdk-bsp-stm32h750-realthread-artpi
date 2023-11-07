@@ -37,3 +37,4 @@ settings/
 *.uvguix*
 CMakeLists.txt
 cmake-build-debug
+.config.old
