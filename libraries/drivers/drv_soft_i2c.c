@@ -17,7 +17,7 @@
 #ifdef RT_USING_I2C
 
 //#define DRV_DEBUG
-#define LOG_TAG              "drv.i2c"
+#define LOG_TAG              "drv.swi2c"
 #include <drv_log.h>
 
 #if !defined(BSP_USING_I2C1) && !defined(BSP_USING_I2C2) && !defined(BSP_USING_I2C3) && !defined(BSP_USING_I2C4)
