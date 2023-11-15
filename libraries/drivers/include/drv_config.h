@@ -113,6 +113,7 @@ extern "C" {
 #include "config/sdio_config.h"
 #include "config/pwm_config.h"
 #include "config/usbd_config.h"
+#include "config/i2c_config.h"
 #endif
 
 #ifdef __cplusplus
