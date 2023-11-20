@@ -3,35 +3,26 @@
 
 #include "drivers/i2c.h"
 
-#define NES_BUTTON_UP           0x0001
-#define NES_BUTTON_RIGHT        0x8000
-#define NES_BUTTON_DOWN         0x4000
-#define NES_BUTTON_LEFT         0x0002
-#define NES_BUTTON_A            0x0010
-#define NES_BUTTON_B            0x0040
-#define NES_BUTTON_START        0x0400
-#define NES_BUTTON_SELECT       0x1000
-
 typedef enum 
 {
-    LEFT,
-    RIGHT,
-    UP,
-    DOWN,
-    SELECT,
-    START,
-    B,
-    A,
-} NES_Controller_Buttons;
+    NES_CONTROLLER_BUTTON_NULL,
+    NES_CONTROLLER_BUTTON_LEFT,
+    NES_CONTROLLER_BUTTON_RIGHT,
+    NES_CONTROLLER_BUTTON_UP,
+    NES_CONTROLLER_BUTTON_DOWN,
+    NES_CONTROLLER_BUTTON_SELECT,
+    NES_CONTROLLER_BUTTON_START,
+    NES_CONTROLLER_BUTTON_B,
+    NES_CONTROLLER_BUTTON_A,
+} nes_controller_button_t;
 
 typedef enum 
 {
     NES_CONTROLLER_OK,
     NES_CONTROLLER_ERR,
-} NES_Controller_Status;
+} nes_controllet_status_t;
 
-NES_Controller_Status nes_controller_init(struct rt_i2c_bus_device *bus, char *bus_name);
-// uint16_t nes_controller_read_code(I2C_HandleTypeDef *i2c);
-// bool nes_match_button(uint16_t code, NES_Controller_Buttons *button);
+nes_controllet_status_t nes_controller_init(struct rt_i2c_bus_device *bus);
+nes_controller_button_t nes_match_button(struct rt_i2c_bus_device *bus);
 
 #endif /* NES_CONTROLLER_H */
