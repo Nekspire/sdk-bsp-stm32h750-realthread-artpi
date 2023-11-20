@@ -90,6 +90,7 @@
 #define RT_USING_SERIAL_V1
 #define RT_SERIAL_USING_DMA
 #define RT_SERIAL_RB_BUFSZ 64
+#define RT_USING_I2C
 #define RT_USING_PIN
 #define RT_USING_MTD_NOR
 #define RT_USING_SPI
@@ -194,6 +195,7 @@
 
 /* Kendryte SDK */
 
+#define BSP_USING_I2C1 "n"
 
 /* AI packages */
 
@@ -230,6 +232,8 @@
 #define BSP_USING_GPIO
 #define BSP_USING_UART
 #define BSP_USING_UART4
+#define BSP_USING_I2C
+#define BSP_USING_I2C4
 #define BSP_USING_SDRAM
 #define BSP_USING_LCD
 

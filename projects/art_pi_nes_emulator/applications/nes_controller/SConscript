@@ -1,0 +1,12 @@
+from building import *
+
+cwd = GetCurrentDir()
+
+src = Glob('*.c')
+
+path = [cwd]
+path += [cwd + '']
+
+group = DefineGroup('NES-Controller', src, depend = [''], CPPPATH = path)
+
+Return('group')
