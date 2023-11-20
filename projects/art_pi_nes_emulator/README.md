@@ -1,1 +1,1 @@
-# ART-PI NES emulator project
+# ART-PI NES-EMU
