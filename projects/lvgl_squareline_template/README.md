@@ -1,0 +1,1 @@
+# LVGL Project Template for ART-PI
