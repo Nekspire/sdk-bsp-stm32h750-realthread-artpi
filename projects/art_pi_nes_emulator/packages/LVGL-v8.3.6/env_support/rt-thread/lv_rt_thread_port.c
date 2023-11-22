@@ -53,7 +53,7 @@ static void lvgl_thread_entry(void *parameter)
 #endif /* LV_USE_LOG */
     lv_init();
     lv_port_disp_init();
-    // lv_port_indev_init();
+    lv_port_indev_init();
     lv_user_gui_init();
 
     /* handle the tasks of LVGL */
