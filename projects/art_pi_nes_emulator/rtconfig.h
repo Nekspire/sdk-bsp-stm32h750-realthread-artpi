@@ -80,6 +80,21 @@
 #define DFS_FILESYSTEMS_MAX 4
 #define DFS_FILESYSTEM_TYPES_MAX 4
 #define DFS_FD_MAX 16
+#define RT_USING_DFS_ELMFAT
+
+/* elm-chan's FatFs, Generic FAT Filesystem Module */
+
+#define RT_DFS_ELM_CODE_PAGE 437
+#define RT_DFS_ELM_WORD_ACCESS
+#define RT_DFS_ELM_USE_LFN_3
+#define RT_DFS_ELM_USE_LFN 3
+#define RT_DFS_ELM_LFN_UNICODE_0
+#define RT_DFS_ELM_LFN_UNICODE 0
+#define RT_DFS_ELM_MAX_LFN 255
+#define RT_DFS_ELM_DRIVES 2
+#define RT_DFS_ELM_MAX_SECTOR_SIZE 512
+#define RT_DFS_ELM_REENTRANT
+#define RT_DFS_ELM_MUTEX_TIMEOUT 3000
 #define RT_USING_DFS_DEVFS
 #define RT_USING_DFS_ROMFS
 
@@ -93,6 +108,12 @@
 #define RT_USING_I2C
 #define RT_USING_PIN
 #define RT_USING_MTD_NOR
+#define RT_USING_SDIO
+#define RT_SDIO_STACK_SIZE 512
+#define RT_SDIO_THREAD_PRIORITY 15
+#define RT_MMCSD_STACK_SIZE 1024
+#define RT_MMCSD_THREAD_PREORITY 22
+#define RT_MMCSD_MAX_PARTITION 16
 #define RT_USING_SPI
 #define RT_USING_SFUD
 #define RT_SFUD_USING_SFDP
@@ -109,6 +130,7 @@
 
 /* POSIX (Portable Operating System Interface) layer */
 
+#define RT_USING_POSIX_FS
 
 /* Interprocess Communication (IPC) */
 
@@ -226,6 +248,8 @@
 #define BSP_USING_USB_TO_USART
 #define BSP_USING_LVGL
 #define BSP_USING_LCD_RGB
+#define BSP_USING_FS
+#define BSP_USING_SDCARD_FS
 
 /* On-chip Peripheral */
 
@@ -234,6 +258,8 @@
 #define BSP_USING_UART4
 #define BSP_USING_I2C
 #define BSP_USING_I2C4
+#define BSP_USING_SDIO
+#define BSP_USING_SDIO1
 #define BSP_USING_SDRAM
 #define BSP_USING_LCD
 
