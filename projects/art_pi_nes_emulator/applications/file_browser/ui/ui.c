@@ -1,11 +1,42 @@
 #include "ui.h"
 #include "lvgl.h"
 #include "lv_btn.h"
+#include "lv_port_indev.h"
 
 lv_obj_t *ui_screen;
 lv_obj_t *ui_label;
 lv_obj_t *ui_panel;
 lv_obj_t *ui_list;
+lv_obj_t *ui_list_curr_button;
+uint32_t ui_list_cnt;
+
+static void event_key_handler(lv_event_cb_t *e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+
+    if (ui_list_curr_button == NULL) 
+        return;
+
+    uint32_t index = lv_obj_get_index(ui_list_curr_button);
+
+    if (event_code == LV_EVENT_KEY && lv_event_get_key(e) == LV_KEY_UP)
+    {
+        if (index != 0)
+        {
+            lv_obj_move_to_index(ui_list_curr_button, index - 1);
+            lv_obj_scroll_to_view(ui_list_curr_button, LV_ANIM_ON);
+        }
+    }
+
+    if (event_code == LV_EVENT_KEY && lv_event_get_key(e) == LV_KEY_DOWN)
+    {
+        if (index != ui_list_cnt)
+        {
+            lv_obj_move_to_index(ui_list_curr_button, index + 1);
+            lv_obj_scroll_to_view(ui_list_curr_button, LV_ANIM_ON);
+        }
+    }
+}
 
 void ui_set_path(const char *path)
 {
@@ -80,10 +111,19 @@ void ui_init(void)
         ui_dir_add_entity(UI_LIST_ENTITY_FILE, "FILE X");
     }
 
-    for (size_t i = 0; i < 2; i++)
+    for (size_t i = 0; i < 4; i++)
     {
         ui_dir_add_entity(UI_LIST_ENTITY_DIR, "DIR X");
     }
 
-    ui_dir_clear();
+
+    ui_list_cnt = lv_obj_get_child_cnt(ui_list);
+    ui_list_curr_button = lv_obj_get_child(ui_list, 0);
+
+    lv_group_t *group = lv_group_create();
+    lv_group_add_obj(group, ui_list_curr_button);
+    lv_indev_set_group(indev, group);
+
+    lv_obj_add_state(ui_list_curr_button, LV_STATE_CHECKED);
+    lv_obj_add_event_cb(ui_list_curr_button, event_key_handler, LV_EVENT_ALL, NULL);
 }
