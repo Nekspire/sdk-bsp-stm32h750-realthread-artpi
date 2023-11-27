@@ -13,6 +13,7 @@
 
 #include <lvgl.h>
 #include <rtthread.h>
+#include <file_browser.h>
 
 #define DBG_TAG    "LVGL"
 #define DBG_LVL    DBG_INFO
@@ -56,11 +57,19 @@ static void lvgl_thread_entry(void *parameter)
     lv_port_indev_init();
     lv_user_gui_init();
 
+    static DIR *rootp;
+    rootp = file_browser_init();
+
     /* handle the tasks of LVGL */
     while(1)
     {
         lv_task_handler();
         rt_thread_mdelay(LV_DISP_DEF_REFR_PERIOD);
+
+        if (NULL != rootp)
+        {
+            file_browser_run(rootp);
+        }        
     }
 }
 

@@ -9,7 +9,9 @@ lv_obj_t *ui_panel;
 lv_obj_t *ui_list;
 lv_group_t *group;
 
-static void event_key_handler(lv_event_cb_t *e)
+ui_event_t ui_event = UI_EVENT_NONE;
+
+static void event_key_handler_cb(lv_event_cb_t *e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t *event_button = lv_event_get_current_target(e);
@@ -18,12 +20,19 @@ static void event_key_handler(lv_event_cb_t *e)
     {
         lv_group_focus_next(group);
         // lv_obj_scroll_to_view(lv_obj_get_child(ui_list, ui_list_focus), LV_ANIM_ON);
+        ui_event = UI_EVENT_DOWN;
     }
 
     if (event_code == LV_EVENT_KEY && lv_event_get_key(e) == LV_KEY_UP)
     {
         lv_group_focus_prev(group);
         // lv_obj_scroll_to_view(lv_obj_get_child(ui_list, ui_list_focus), LV_ANIM_ON);
+        ui_event = UI_EVENT_UP;
+    }
+
+    if (event_code == LV_EVENT_KEY && lv_event_get_key(e) == LV_KEY_ENTER)
+    {
+        ui_event = UI_EVENT_OPEN;
     }
 }
 
@@ -57,7 +66,7 @@ void ui_dir_add_entity(ui_list_entity_t type, const char *txt)
     lv_obj_add_flag(ui_list_button, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
 
     lv_group_add_obj(group, ui_list_button);
-    lv_obj_add_event_cb(ui_list_button, event_key_handler, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_list_button, event_key_handler_cb, LV_EVENT_ALL, NULL);
 }
 
 void ui_dir_clear()

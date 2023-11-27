@@ -12,8 +12,7 @@
 
 void lv_user_gui_init(void)
 {
-    extern void lv_file_browser_init(void);
-    lv_file_browser_init();
+
 }
 
 #endif /* __RTTHREAD__ */
