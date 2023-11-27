@@ -5,8 +5,9 @@
 char *pathp = NULL;
 uint32_t path_cnt = 0;
 uint32_t path_size = 0;
-uint32_t dir_cnt = 0;
-long dir_old_index = 0;
+uint32_t dir_pos = 0;
+uint32_t dir_offset = 0;
+DIR gdir;
 
 static void path_add_dir(const char* txt)
 {
@@ -23,7 +24,7 @@ static void path_add_dir(const char* txt)
     {
         strcat(pathp, "/");
     }
-    
+
     strcat(pathp, txt);
     path_cnt++;
 }
@@ -41,8 +42,10 @@ static void file_browser_read_dir(DIR* dirp)
     {
         ui_set_path(pathp);
         ui_dir_clear();
-
+        dir_offset = 0;
+        dir_pos = 0;
         rewinddir(dirp);
+
         while ((entp = readdir(dirp)) != RT_NULL)
         {
             if (FT_DIRECTORY == entp->d_type)
@@ -52,6 +55,10 @@ static void file_browser_read_dir(DIR* dirp)
             else
             {
                 ui_dir_add_entity(UI_LIST_ENTITY_FILE, entp->d_name);
+            }
+            if (0 == dir_offset)
+            {
+                dir_offset = telldir(dirp);
             }
         }
         rewinddir(dirp);
@@ -89,11 +96,9 @@ DIR * file_browser_init(void)
     return rootp;
 }
 
-DIR gdir;
-
 void file_browser_run(DIR *rootp)
 { 
-    struct dirent *dp;
+    struct dirent *entp;
 
     switch (ui_event)
     {
@@ -101,31 +106,43 @@ void file_browser_run(DIR *rootp)
 
             break;
         case UI_EVENT_DOWN:
-            
+
+            dir_pos += dir_offset;
+
             if (0 == path_cnt)
             {
                 /* use root pointer */
-                dp = readdir(rootp);   
+                entp = readdir(rootp);
             }
             else
             {
-                dp = readdir(&gdir);  
+                entp = readdir(&gdir);  
             }
-
-            if (dp == NULL)
+            if (entp != NULL)
             {
-                /* code */
+                rt_kprintf("[file_browser_run] UI_EVENT_DOWN dir_pos = %u\n", dir_pos);
             }
-            else
-            {
-                rt_kprintf("[file_browser_run] UI_EVENT_DOWN %s\n", dp->d_name);
-            }
-            
             ui_event = UI_EVENT_NONE;
 
             break;
         case UI_EVENT_UP:
-        
+
+            dir_pos -= dir_offset;
+
+            if (0 == path_cnt)
+            {
+                /* use root pointer */
+                seekdir(rootp, dir_pos);
+            }
+            else
+            {
+                seekdir(&gdir, dir_pos); 
+            }
+            if (entp != NULL)
+            {
+                rt_kprintf("[file_browser_run] UI_EVENT_UP dir_pos = %u\n", dir_pos);
+            }
+            
             ui_event = UI_EVENT_NONE;
 
             break;
@@ -134,19 +151,18 @@ void file_browser_run(DIR *rootp)
             if (0 == path_cnt)
             {
                 /* use root pointer */
-                dp = readdir(rootp);
+                entp = readdir(rootp);
             }
             else
             {
-                dp = readdir(&gdir);
+                entp = readdir(&gdir);
             }
-            
-            if (NULL != dp)
+            if (NULL != entp)
             {
-                rt_kprintf("[file_browser_run] UI_EVENT_OPEN %s\n", dp->d_name);
-                if (FT_DIRECTORY == dp->d_type)
+                rt_kprintf("[file_browser_run] UI_EVENT_OPEN %s\n", entp->d_name);
+                if (FT_DIRECTORY == entp->d_type)
                 {
-                    path_add_dir(dp->d_name);
+                    path_add_dir(entp->d_name);
 
                     DIR *p = opendir(pathp);
                     
