@@ -26,6 +26,7 @@ typedef enum
 void ui_set_path(const char *path);
 void ui_dir_add_entity(ui_list_entity_t type, const char *name);
 void ui_dir_clear();
+void ui_empty_dir_add_entity(void);
 
 extern ui_event_t ui_event;
 

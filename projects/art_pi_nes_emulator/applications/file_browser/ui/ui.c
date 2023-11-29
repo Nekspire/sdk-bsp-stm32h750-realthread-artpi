@@ -34,6 +34,11 @@ static void event_key_handler_cb(lv_event_cb_t *e)
     {
         ui_event = UI_EVENT_OPEN;
     }
+
+    if (event_code == LV_EVENT_KEY && lv_event_get_key(e) == LV_KEY_ESC)
+    {
+        ui_event = UI_EVENT_CLOSE;
+    }
 }
 
 void ui_set_path(const char *path)
@@ -65,6 +70,18 @@ void ui_dir_add_entity(ui_list_entity_t type, const char *txt)
     lv_obj_set_size(ui_list_button, lv_pct(100), 50);
     lv_obj_add_flag(ui_list_button, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
 
+    lv_group_add_obj(group, ui_list_button);
+    lv_obj_add_event_cb(ui_list_button, event_key_handler_cb, LV_EVENT_ALL, NULL);
+}
+
+void ui_empty_dir_add_entity(void)
+{
+    lv_obj_t *ui_list_button;
+
+    group = lv_group_create();
+    lv_indev_set_group(indev, group);
+    ui_list_button = lv_list_add_btn(ui_list, NULL, " ");
+    lv_obj_set_size(ui_list_button, lv_pct(100), 50);
     lv_group_add_obj(group, ui_list_button);
     lv_obj_add_event_cb(ui_list_button, event_key_handler_cb, LV_EVENT_ALL, NULL);
 }

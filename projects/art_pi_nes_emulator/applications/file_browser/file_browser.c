@@ -20,23 +20,82 @@ static void path_add_dir(const char* txt)
 
     pathp = (char *) realloc(pathp, (path_size * sizeof(char)));
 
-    if (0 != path_cnt)
+    if (NULL != pathp)
     {
-        strcat(pathp, "/");
+        if (0 != path_cnt)
+        {
+            strcat(pathp, "/");
+        }
+
+        strcat(pathp, txt);
+        path_cnt++;
+    }
+}
+
+uint8_t strcut(char *txt, uint32_t len)
+{
+    uint8_t ret = 0;
+
+    uint32_t str_len = strlen(txt);
+    
+    if (str_len >= len)
+    {
+        for (int i = len; i >= 0; i--)
+        {
+            if (i == 0)
+            {
+                txt[str_len] = '\0';
+            }
+            else
+            {
+                txt[str_len] = 0;
+            }
+            str_len--;
+        }
+    }
+    else
+    {
+        ret = 1;
     }
 
-    strcat(pathp, txt);
-    path_cnt++;
+    return ret;
 }
 
 static void path_remove_dir()
 {
-    path_cnt--;   
+    uint32_t pchar = 0;
+    uint32_t i = strlen(pathp);
+    uint8_t ret;
+
+    if (0 != path_cnt)
+    {
+        while (pathp[i] != '/')
+        {
+            pchar++;
+            i--;
+        }
+        /* Do not remove root symbol */
+        if (path_cnt == 1)
+        {
+            pchar -= 1;
+        }
+        if (0 ==  strcut(pathp, pchar))
+        {
+            path_size -= pchar;
+            pathp = (char *) realloc(pathp, (path_size * sizeof(char)));
+
+            if (NULL != pathp)
+            {
+                path_cnt--; 
+            }
+        }
+    }
 }
 
 static void file_browser_read_dir(DIR* dirp)
 {
     struct dirent *entp;
+    uint32_t cnt = 0;
 
     if (NULL != dirp)
     {
@@ -60,7 +119,13 @@ static void file_browser_read_dir(DIR* dirp)
             {
                 dir_offset = telldir(dirp);
             }
+            cnt++;
         }
+        if (0 == cnt)
+        {
+            ui_empty_dir_add_entity();
+        }
+        
         rewinddir(dirp);
     }
 }
@@ -169,9 +234,8 @@ void file_browser_run(DIR *rootp)
                     if (NULL != p)
                     {
                         gdir = *p;
+                        file_browser_read_dir(&gdir);
                     }
-
-                    file_browser_read_dir(&gdir);
                 }
                 else
                 {
@@ -184,6 +248,31 @@ void file_browser_run(DIR *rootp)
             break;
         
         case UI_EVENT_CLOSE:
+
+            if (0 != path_cnt)
+            {
+                path_remove_dir();
+
+                rt_kprintf("[file_browser_run] UI_EVENT_CLOSE path: %s\n", pathp);
+                rt_kprintf("[file_browser_run] UI_EVENT_CLOSE path_cnt: %u\n", path_cnt);
+
+                if (0 == path_cnt)
+                {
+                    file_browser_read_dir(rootp);
+                }
+                else
+                {
+                    DIR *p = opendir(pathp);
+                        
+                    if (NULL != p)
+                    {
+                        gdir = *p;
+                        file_browser_read_dir(&gdir);
+                    }
+                }
+            }
+            
+            ui_event = UI_EVENT_NONE;
 
             break;
 
