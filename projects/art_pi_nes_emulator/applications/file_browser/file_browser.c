@@ -91,7 +91,7 @@ static void path_remove_dir()
     }
 }
 
-static void file_browser_read_dir(DIR* dirp)
+static void dir_read(DIR* dirp)
 {
     struct dirent *entp;
     uint32_t cnt = 0;
@@ -128,8 +128,126 @@ static void file_browser_read_dir(DIR* dirp)
         {
             dir_pos_max = dir_offset * (cnt - 1);
         }
-        rt_kprintf("[file_browser_read_dir] dir_pos_max = %u\n", dir_pos_max);
+        rt_kprintf("[dir_read] dir_pos_max = %u\n", dir_pos_max);
         rewinddir(dirp);
+    }
+}
+
+static void dir_scroll_down(DIR *rootp, DIR *dirp)
+{
+    struct dirent *entp;
+
+    if (dir_pos == dir_pos_max)
+    {
+        dir_pos = 0;
+    }
+    else
+    {
+        dir_pos += dir_offset;
+    }
+    if (0 == path_cnt)
+    {
+        /* use root pointer */
+        entp = readdir(rootp);
+    }
+    else
+    {
+        entp = readdir(dirp);  
+    }
+    if (entp != NULL)
+    {
+        rt_kprintf("[dir_scroll_down] dir_pos = %u\n", dir_pos);
+    }
+}
+
+static void dir_scroll_up(DIR *rootp, DIR *dirp)
+{
+    struct dirent *entp;
+
+    if (dir_pos == 0)
+    {
+        dir_pos = dir_pos_max;
+    }
+    else
+    {
+        dir_pos -= dir_offset;
+    }
+    if (0 == path_cnt)
+    {
+        /* use root pointer */
+        seekdir(rootp, dir_pos);
+    }
+    else
+    {
+        seekdir(dirp, dir_pos); 
+    }
+    if (entp != NULL)
+    {
+        rt_kprintf("[dir_scroll_up] dir_pos = %u\n", dir_pos);
+    }
+}
+
+static void dir_open(DIR *rootp, DIR *dirp)
+{
+    struct dirent *entp;
+
+    if (0 == path_cnt)
+    {
+        /* use root pointer */
+        entp = readdir(rootp);
+    }
+    else
+    {
+        entp = readdir(dirp);
+    }
+    if (NULL != entp)
+    {
+        if (FT_DIRECTORY == entp->d_type)
+        {
+            path_add_dir(entp->d_name);
+
+            rt_kprintf("[dir_open] %s\n", entp->d_name);
+            rt_kprintf("[dir_open] path: %s\n", pathp);
+            rt_kprintf("[dir_open] path_cnt: %u\n", path_cnt);
+
+            DIR *p = opendir(pathp);
+            
+            if (NULL != p)
+            {
+                *dirp = *p;
+                dir_read(dirp);  
+            }
+        }
+        else
+        {
+            /* TODO */ 
+        }
+    }
+}
+
+static void dir_close(DIR *rootp, DIR *dirp)
+{
+    if (0 != path_cnt)
+    {
+        path_remove_dir();
+
+        rt_kprintf("[dir_close] path: %s\n", pathp);
+        rt_kprintf("[dir_close] path_cnt: %u\n", path_cnt);
+
+        if (0 == path_cnt)
+        {
+            dir_read(rootp);
+        }
+        else
+        {
+            DIR *p = opendir(pathp);
+                
+            if (NULL != p)
+            {
+                *dirp = *p;
+                dir_read(dirp);
+            }
+        }
     }
 }
 
@@ -153,7 +271,7 @@ DIR * file_browser_init(void)
 
         if (NULL != rootp)
         {
-            file_browser_read_dir(rootp);
+            dir_read(rootp);
         }
         else
         {
@@ -166,136 +284,40 @@ DIR * file_browser_init(void)
 
 void file_browser_run(DIR *rootp)
 { 
-    struct dirent *entp;
-    static DIR dirp;
+    static DIR dir;
 
     switch (ui_event)
     {
         case UI_EVENT_NONE:
 
             break;
+
         case UI_EVENT_DOWN:
 
-            if (dir_pos == dir_pos_max)
-            {
-                dir_pos = 0;
-            }
-            else
-            {
-                dir_pos += dir_offset;
-            }
-            if (0 == path_cnt)
-            {
-                /* use root pointer */
-                entp = readdir(rootp);
-            }
-            else
-            {
-                entp = readdir(&dirp);  
-            }
-            if (entp != NULL)
-            {
-                rt_kprintf("[file_browser_run] UI_EVENT_DOWN dir_pos = %u\n", dir_pos);
-            }
+            dir_scroll_down(rootp, &dir);
             ui_event = UI_EVENT_NONE;
-
             break;
+    
         case UI_EVENT_UP:
 
-            if (dir_pos == 0)
-            {
-                dir_pos = dir_pos_max;
-            }
-            else
-            {
-                dir_pos -= dir_offset;
-            }
-            if (0 == path_cnt)
-            {
-                /* use root pointer */
-                seekdir(rootp, dir_pos);
-            }
-            else
-            {
-                seekdir(&dirp, dir_pos); 
-            }
-            if (entp != NULL)
-            {
-                rt_kprintf("[file_browser_run] UI_EVENT_UP dir_pos = %u\n", dir_pos);
-            }
-            
+            dir_scroll_up(rootp, &dir);
             ui_event = UI_EVENT_NONE;
-
             break;
+
         case UI_EVENT_OPEN:
 
-            if (0 == path_cnt)
-            {
-                /* use root pointer */
-                entp = readdir(rootp);
-            }
-            else
-            {
-                entp = readdir(&dirp);
-            }
-            if (NULL != entp)
-            {
-                if (FT_DIRECTORY == entp->d_type)
-                {
-                    path_add_dir(entp->d_name);
-
-                    rt_kprintf("[file_browser_run] UI_EVENT_OPEN %s\n", entp->d_name);
-                    rt_kprintf("[file_browser_run] UI_EVENT_OPEN path: %s\n", pathp);
-                    rt_kprintf("[file_browser_run] UI_EVENT_OPEN path_cnt: %u\n", path_cnt);
-
-                    DIR *p = opendir(pathp);
-                    
-                    if (NULL != p)
-                    {
-                        dirp = *p;
-                        file_browser_read_dir(&dirp);  
-                    }
-                }
-                else
-                {
-                    /* TODO */ 
-                }
-            }
-
+            dir_open(rootp, &dir);
             ui_event = UI_EVENT_NONE;
-
             break;
         
         case UI_EVENT_CLOSE:
-
-            if (0 != path_cnt)
-            {
-                path_remove_dir();
-
-                rt_kprintf("[file_browser_run] UI_EVENT_CLOSE path: %s\n", pathp);
-                rt_kprintf("[file_browser_run] UI_EVENT_CLOSE path_cnt: %u\n", path_cnt);
-
-                if (0 == path_cnt)
-                {
-                    file_browser_read_dir(rootp);
-                }
-                else
-                {
-                    DIR *p = opendir(pathp);
-                        
-                    if (NULL != p)
-                    {
-                        dirp = *p;
-                        file_browser_read_dir(&dirp);
-                    }
-                }
-            }
             
+            dir_close(rootp, &dir);
             ui_event = UI_EVENT_NONE;
-
             break;
 
         default:
+
             break;
     }
 }
