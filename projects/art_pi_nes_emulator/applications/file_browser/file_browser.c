@@ -6,8 +6,8 @@ char *pathp = NULL;
 uint32_t path_cnt = 0;
 uint32_t path_size = 0;
 uint32_t dir_pos = 0;
+uint32_t dir_pos_max = 0;
 uint32_t dir_offset = 0;
-DIR gdir;
 
 static void path_add_dir(const char* txt)
 {
@@ -32,25 +32,24 @@ static void path_add_dir(const char* txt)
     }
 }
 
-uint8_t strcut(char *txt, uint32_t len)
+static uint8_t strcut(char *txt, uint32_t len)
 {
     uint8_t ret = 0;
-
-    uint32_t str_len = strlen(txt);
+    uint32_t txtlen = strlen(txt);
     
-    if (str_len >= len)
+    if (txtlen >= len)
     {
         for (int i = len; i >= 0; i--)
         {
             if (i == 0)
             {
-                txt[str_len] = '\0';
+                txt[txtlen] = '\0';
             }
             else
             {
-                txt[str_len] = 0;
+                txt[txtlen] = 0;
             }
-            str_len--;
+            txtlen--;
         }
     }
     else
@@ -125,7 +124,11 @@ static void file_browser_read_dir(DIR* dirp)
         {
             ui_empty_dir_add_entity();
         }
-        
+        else
+        {
+            dir_pos_max = dir_offset * (cnt - 1);
+        }
+        rt_kprintf("[file_browser_read_dir] dir_pos_max = %u\n", dir_pos_max);
         rewinddir(dirp);
     }
 }
@@ -164,6 +167,7 @@ DIR * file_browser_init(void)
 void file_browser_run(DIR *rootp)
 { 
     struct dirent *entp;
+    static DIR dirp;
 
     switch (ui_event)
     {
@@ -172,8 +176,14 @@ void file_browser_run(DIR *rootp)
             break;
         case UI_EVENT_DOWN:
 
-            dir_pos += dir_offset;
-
+            if (dir_pos == dir_pos_max)
+            {
+                dir_pos = 0;
+            }
+            else
+            {
+                dir_pos += dir_offset;
+            }
             if (0 == path_cnt)
             {
                 /* use root pointer */
@@ -181,7 +191,7 @@ void file_browser_run(DIR *rootp)
             }
             else
             {
-                entp = readdir(&gdir);  
+                entp = readdir(&dirp);  
             }
             if (entp != NULL)
             {
@@ -192,8 +202,14 @@ void file_browser_run(DIR *rootp)
             break;
         case UI_EVENT_UP:
 
-            dir_pos -= dir_offset;
-
+            if (dir_pos == 0)
+            {
+                dir_pos = dir_pos_max;
+            }
+            else
+            {
+                dir_pos -= dir_offset;
+            }
             if (0 == path_cnt)
             {
                 /* use root pointer */
@@ -201,7 +217,7 @@ void file_browser_run(DIR *rootp)
             }
             else
             {
-                seekdir(&gdir, dir_pos); 
+                seekdir(&dirp, dir_pos); 
             }
             if (entp != NULL)
             {
@@ -220,21 +236,24 @@ void file_browser_run(DIR *rootp)
             }
             else
             {
-                entp = readdir(&gdir);
+                entp = readdir(&dirp);
             }
             if (NULL != entp)
             {
-                rt_kprintf("[file_browser_run] UI_EVENT_OPEN %s\n", entp->d_name);
                 if (FT_DIRECTORY == entp->d_type)
                 {
                     path_add_dir(entp->d_name);
+
+                    rt_kprintf("[file_browser_run] UI_EVENT_OPEN %s\n", entp->d_name);
+                    rt_kprintf("[file_browser_run] UI_EVENT_OPEN path: %s\n", pathp);
+                    rt_kprintf("[file_browser_run] UI_EVENT_OPEN path_cnt: %u\n", path_cnt);
 
                     DIR *p = opendir(pathp);
                     
                     if (NULL != p)
                     {
-                        gdir = *p;
-                        file_browser_read_dir(&gdir);
+                        dirp = *p;
+                        file_browser_read_dir(&dirp);  
                     }
                 }
                 else
@@ -266,8 +285,8 @@ void file_browser_run(DIR *rootp)
                         
                     if (NULL != p)
                     {
-                        gdir = *p;
-                        file_browser_read_dir(&gdir);
+                        dirp = *p;
+                        file_browser_read_dir(&dirp);
                     }
                 }
             }
