@@ -4,10 +4,13 @@
 #include "lv_port_indev.h"
 
 lv_obj_t *ui_screen;
-lv_obj_t *ui_label;
-lv_obj_t *ui_panel;
+lv_obj_t *ui_label1;
+lv_obj_t *ui_panel1;
+lv_obj_t *ui_panel2;
 lv_obj_t *ui_list;
 lv_group_t *group;
+lv_obj_t *ui_label3;
+lv_obj_t *ui_label2;
 
 ui_event_t ui_event = UI_EVENT_NONE;
 
@@ -43,7 +46,7 @@ static void event_key_handler_cb(lv_event_cb_t *e)
 
 void ui_set_path(const char *path)
 {
-    lv_label_set_text(ui_label, path);
+    lv_label_set_text(ui_label1, path);
 }
 
 void ui_dir_add_entity(ui_list_entity_t type, const char *txt)
@@ -92,30 +95,49 @@ void ui_dir_clear()
 
     ui_list = lv_list_create(ui_screen);
 
-    lv_obj_set_align(ui_list, LV_ALIGN_TOP_LEFT);
-    lv_obj_set_size(ui_list, lv_pct(100), 430);
-    lv_obj_set_scrollbar_mode(ui_list, LV_SCROLLBAR_MODE_ON);
+    lv_obj_set_align(ui_list, LV_ALIGN_LEFT_MID);
+    lv_obj_set_size(ui_list, lv_pct(100), 370);
+    lv_obj_set_scrollbar_mode(ui_list, LV_SCROLLBAR_MODE_AUTO);
+}
+
+void ui_dir_add_count(const char *txt)
+{
+    lv_label_set_text(ui_label3, txt);
 }
 
 void ui_init(void)
 {
     ui_screen = lv_obj_create(NULL);
-    ui_panel = lv_obj_create(ui_screen);
-    ui_label = lv_label_create(ui_panel);
+    ui_panel1 = lv_obj_create(ui_screen);
+    ui_label1 = lv_label_create(ui_panel1);
     ui_list = lv_list_create(ui_screen);
+    ui_panel2 = lv_obj_create(ui_screen);
+
+    ui_label2 = lv_label_create(ui_panel2);
+    ui_label3 = lv_label_create(ui_panel2);
 
     lv_scr_load(ui_screen);
-    lv_obj_set_layout(ui_screen, LV_LAYOUT_FLEX);
-    lv_obj_set_flex_flow(ui_screen, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_scrollbar_mode(ui_screen, LV_SCROLLBAR_MODE_OFF);
 
-    lv_obj_set_size(ui_panel, lv_pct(100), 50);
-    lv_obj_set_align(ui_panel, LV_ALIGN_TOP_LEFT);
-    lv_obj_set_scrollbar_mode(ui_panel, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_set_size(ui_panel1, lv_pct(100), 50);
+    lv_obj_set_align(ui_panel1, LV_ALIGN_TOP_LEFT);
+    lv_obj_set_scrollbar_mode(ui_panel1, LV_SCROLLBAR_MODE_OFF);
 
-    lv_obj_set_align(ui_label, LV_ALIGN_OUT_LEFT_MID);
+    lv_label_set_long_mode(ui_label1, LV_LABEL_LONG_SCROLL_CIRCULAR);
+    lv_obj_set_width(ui_label1, lv_pct(100));
+    lv_obj_set_align(ui_label1, LV_ALIGN_LEFT_MID);
 
     lv_obj_set_align(ui_list, LV_ALIGN_TOP_LEFT);
-    lv_obj_set_size(ui_list, lv_pct(100), 430);
+    lv_obj_set_size(ui_list, lv_pct(100), 370);
     lv_obj_set_scrollbar_mode(ui_list, LV_SCROLLBAR_MODE_AUTO);
+
+    lv_obj_set_align(ui_panel2, LV_ALIGN_BOTTOM_LEFT);
+    lv_obj_set_size(ui_panel2, lv_pct(100), 50);
+    lv_obj_set_scrollbar_mode(ui_panel2, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_set_layout(ui_panel2, LV_LAYOUT_FLEX);
+    lv_obj_set_flex_flow(ui_panel2, LV_FLEX_FLOW_ROW);
+
+    lv_label_set_text(ui_label2, "Total:");
+    lv_obj_set_align(ui_label2, LV_ALIGN_LEFT_MID);
+    lv_obj_set_align(ui_label3, LV_ALIGN_LEFT_MID);
 }

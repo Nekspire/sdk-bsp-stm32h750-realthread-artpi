@@ -95,6 +95,7 @@ static void dir_read(DIR* dirp)
 {
     struct dirent *entp;
     uint32_t cnt = 0;
+    static char cnt_str[10];
 
     if (NULL != dirp)
     {
@@ -128,6 +129,7 @@ static void dir_read(DIR* dirp)
         {
             dir_pos_max = dir_offset * (cnt - 1);
         }
+        ui_dir_add_count(__itoa(cnt, cnt_str, 10));
         rt_kprintf("[dir_read] dir_pos_max = %u\n", dir_pos_max);
         rewinddir(dirp);
     }
