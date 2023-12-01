@@ -1,9 +1,9 @@
 #include <lvgl.h>
 #include <rtdevice.h>
+#include <lv_port_indev.h>
 #include "nes_controller.h"
 
 struct rt_i2c_bus_device *i2c_bus;
-lv_indev_t *indev;
 
 static void nes_controller_read_cb(lv_indev_drv_t *drv, lv_indev_data_t *data)
 {
@@ -68,15 +68,17 @@ rt_err_t rt_hw_nes_controller_register(void)
     }
 }
 
-void lv_port_indev_init(void)
+lv_port_indev_t lv_port_indev_init(void)
 {
-    static lv_indev_drv_t indev_drv;
+    static lv_port_indev_t lv_port;
 
-    lv_indev_drv_init(&indev_drv);
+    lv_indev_drv_init(&lv_port.indev_drv);
 
-    indev_drv.type = LV_INDEV_TYPE_KEYPAD;
-    indev_drv.read_cb = nes_controller_read_cb;
+    lv_port.indev_drv.type = LV_INDEV_TYPE_KEYPAD;
+    lv_port.indev_drv.read_cb = nes_controller_read_cb;
 
-    indev = lv_indev_drv_register(&indev_drv);
+    lv_port.indevp = lv_indev_drv_register(&lv_port.indev_drv);
     rt_hw_nes_controller_register();
+
+    return lv_port;
 }

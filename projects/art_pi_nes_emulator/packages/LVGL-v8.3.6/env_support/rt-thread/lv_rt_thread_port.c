@@ -14,6 +14,7 @@
 #include <lvgl.h>
 #include <rtthread.h>
 #include <file_browser.h>
+#include <lv_port_indev.h>
 
 #define DBG_TAG    "LVGL"
 #define DBG_LVL    DBG_INFO
@@ -28,7 +29,6 @@
 #endif /* PKG_LVGL_THREAD_PRIO */
 
 extern void lv_port_disp_init(void);
-extern void lv_port_indev_init(void);
 extern void lv_user_gui_init(void);
 
 static struct rt_thread lvgl_thread;
@@ -49,16 +49,17 @@ static void lv_rt_log(const char *buf)
 
 static void lvgl_thread_entry(void *parameter)
 {
+    static DIR *rootp;
+
 #if LV_USE_LOG
     lv_log_register_print_cb(lv_rt_log);
 #endif /* LV_USE_LOG */
     lv_init();
     lv_port_disp_init();
-    lv_port_indev_init();
     lv_user_gui_init();
 
-    static DIR *rootp;
-    rootp = file_browser_init();
+    lv_port_indev_t lv_port_indev = lv_port_indev_init();
+    rootp = file_browser_init(lv_port_indev.indevp, lv_port_indev.indev_drv.type);
 
     /* handle the tasks of LVGL */
     while(1)

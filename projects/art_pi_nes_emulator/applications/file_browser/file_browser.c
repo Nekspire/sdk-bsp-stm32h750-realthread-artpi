@@ -1,6 +1,5 @@
 #include "file_browser.h"
-#include "ui.h"
-#include "rtthread.h"
+#include "ui/ui.h"
 
 char *pathp = NULL;
 uint32_t path_cnt = 0;
@@ -91,7 +90,7 @@ static void path_remove_dir()
     }
 }
 
-static void dir_read(DIR* dirp)
+static void dir_read (DIR* dirp)
 {
     struct dirent *entp;
     uint32_t cnt = 0;
@@ -105,7 +104,7 @@ static void dir_read(DIR* dirp)
         dir_pos = 0;
         rewinddir(dirp);
 
-        while ((entp = readdir(dirp)) != RT_NULL)
+        while ((entp = readdir(dirp)) != 0)
         {
             if (FT_DIRECTORY == entp->d_type)
             {
@@ -253,12 +252,12 @@ static void dir_close(DIR *rootp, DIR *dirp)
     }
 }
 
-DIR * file_browser_init(void)
+DIR * file_browser_init(lv_indev_t *indevp, lv_indev_type_t type)
 { 
     static DIR *rootp;
 
     /* Initialize file browser ui */
-    ui_init();
+    ui_init(indevp, type);
 
     /* Reserve memory for root path string */
     path_size += sizeof("/");
@@ -288,38 +287,41 @@ void file_browser_run(DIR *rootp)
 { 
     static DIR dir;
 
-    switch (ui_event)
+    if (NULL != rootp)
     {
-        case UI_EVENT_NONE:
+        switch (ui_event)
+        {
+            case UI_EVENT_NONE:
 
-            break;
+                break;
 
-        case UI_EVENT_DOWN:
+            case UI_EVENT_DOWN:
 
-            dir_scroll_down(rootp, &dir);
-            ui_event = UI_EVENT_NONE;
-            break;
-    
-        case UI_EVENT_UP:
-
-            dir_scroll_up(rootp, &dir);
-            ui_event = UI_EVENT_NONE;
-            break;
-
-        case UI_EVENT_OPEN:
-
-            dir_open(rootp, &dir);
-            ui_event = UI_EVENT_NONE;
-            break;
+                dir_scroll_down(rootp, &dir);
+                ui_event = UI_EVENT_NONE;
+                break;
         
-        case UI_EVENT_CLOSE:
+            case UI_EVENT_UP:
+
+                dir_scroll_up(rootp, &dir);
+                ui_event = UI_EVENT_NONE;
+                break;
+
+            case UI_EVENT_OPEN:
+
+                dir_open(rootp, &dir);
+                ui_event = UI_EVENT_NONE;
+                break;
             
-            dir_close(rootp, &dir);
-            ui_event = UI_EVENT_NONE;
-            break;
+            case UI_EVENT_CLOSE:
+                
+                dir_close(rootp, &dir);
+                ui_event = UI_EVENT_NONE;
+                break;
 
-        default:
+            default:
 
-            break;
+                break;
+        }
     }
 }

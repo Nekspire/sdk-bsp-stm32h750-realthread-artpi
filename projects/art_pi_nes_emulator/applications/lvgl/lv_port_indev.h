@@ -8,9 +8,13 @@ extern "C"
 
 #include <lvgl.h>
 
-extern lv_indev_t *indev;
+typedef struct
+{
+   lv_indev_drv_t indev_drv;
+   lv_indev_t *indevp;
+} lv_port_indev_t;
 
-void lv_port_indev_init(void);
+lv_port_indev_t lv_port_indev_init(void);
 
 #ifdef __cplusplus
 }

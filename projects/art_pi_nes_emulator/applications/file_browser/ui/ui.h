@@ -1,12 +1,12 @@
 #ifndef _UI_H
 #define _UI_H
 
+#include "lv_hal_indev.h"
+
 #ifdef __cplusplus
 extern "C" 
 {
 #endif
-
-void ui_init(void);
 
 typedef enum
 {
@@ -23,6 +23,8 @@ typedef enum
    UI_EVENT_CLOSE
 } ui_event_t;
 
+
+uint8_t ui_init(lv_indev_t *indevp, lv_indev_type_t type);
 void ui_set_path(const char *path);
 void ui_dir_add_entity(ui_list_entity_t type, const char *name);
 void ui_dir_clear();
