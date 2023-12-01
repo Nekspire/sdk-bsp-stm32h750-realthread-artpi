@@ -3,14 +3,28 @@
 #include "lv_btn.h"
 #include "lv_port_indev.h"
 
+
+#define UI_STYLE1_BG_COLOR 0x0000
+
+const lv_style_const_prop_t ui_style_props[] = 
+{
+   LV_STYLE_CONST_BG_COLOR(UI_STYLE1_BG_COLOR),
+   LV_STYLE_CONST_BORDER_COLOR(UI_STYLE1_BG_COLOR),
+   LV_STYLE_CONST_RADIUS(0)
+};
+
+LV_STYLE_CONST_INIT(ui_style_widgets_default, ui_style_props);
+
 lv_obj_t *ui_screen;
 lv_obj_t *ui_label1;
 lv_obj_t *ui_panel1;
 lv_obj_t *ui_panel2;
 lv_obj_t *ui_list;
-lv_group_t *group;
 lv_obj_t *ui_label3;
 lv_obj_t *ui_label2;
+lv_obj_t *ui_label_icon1;
+
+lv_group_t *ui_group;
 
 ui_event_t ui_event = UI_EVENT_NONE;
 
@@ -21,15 +35,13 @@ static void event_key_handler_cb(lv_event_cb_t *e)
 
     if (event_code == LV_EVENT_KEY && lv_event_get_key(e) == LV_KEY_DOWN)
     {
-        lv_group_focus_next(group);
-        // lv_obj_scroll_to_view(lv_obj_get_child(ui_list, ui_list_focus), LV_ANIM_ON);
+        lv_group_focus_next(ui_group);
         ui_event = UI_EVENT_DOWN;
     }
 
     if (event_code == LV_EVENT_KEY && lv_event_get_key(e) == LV_KEY_UP)
     {
-        lv_group_focus_prev(group);
-        // lv_obj_scroll_to_view(lv_obj_get_child(ui_list, ui_list_focus), LV_ANIM_ON);
+        lv_group_focus_prev(ui_group);
         ui_event = UI_EVENT_UP;
     }
 
@@ -55,8 +67,8 @@ void ui_dir_add_entity(ui_list_entity_t type, const char *txt)
 
     if (0 == lv_obj_get_child_cnt(ui_list))
     {
-        group = lv_group_create();
-        lv_indev_set_group(indev, group);
+        ui_group = lv_group_create();
+        lv_indev_set_group(indev, ui_group);
     }
 
     switch (type)
@@ -72,8 +84,10 @@ void ui_dir_add_entity(ui_list_entity_t type, const char *txt)
 
     lv_obj_set_size(ui_list_button, lv_pct(100), 50);
     lv_obj_add_flag(ui_list_button, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_set_style_text_color(ui_list_button, lv_color_white(), LV_PART_MAIN);
+    lv_obj_add_style(ui_list_button, &ui_style_widgets_default, LV_PART_MAIN);
 
-    lv_group_add_obj(group, ui_list_button);
+    lv_group_add_obj(ui_group, ui_list_button);
     lv_obj_add_event_cb(ui_list_button, event_key_handler_cb, LV_EVENT_ALL, NULL);
 }
 
@@ -81,11 +95,11 @@ void ui_empty_dir_add_entity(void)
 {
     lv_obj_t *ui_list_button;
 
-    group = lv_group_create();
-    lv_indev_set_group(indev, group);
+    ui_group = lv_group_create();
+    lv_indev_set_group(indev, ui_group);
     ui_list_button = lv_list_add_btn(ui_list, NULL, " ");
     lv_obj_set_size(ui_list_button, lv_pct(100), 50);
-    lv_group_add_obj(group, ui_list_button);
+    lv_group_add_obj(ui_group, ui_list_button);
     lv_obj_add_event_cb(ui_list_button, event_key_handler_cb, LV_EVENT_ALL, NULL);
 }
 
@@ -98,6 +112,7 @@ void ui_dir_clear()
     lv_obj_set_align(ui_list, LV_ALIGN_LEFT_MID);
     lv_obj_set_size(ui_list, lv_pct(100), 370);
     lv_obj_set_scrollbar_mode(ui_list, LV_SCROLLBAR_MODE_AUTO);
+    lv_obj_add_style(ui_list, &ui_style_widgets_default, LV_PART_MAIN);
 }
 
 void ui_dir_add_count(const char *txt)
@@ -109,35 +124,49 @@ void ui_init(void)
 {
     ui_screen = lv_obj_create(NULL);
     ui_panel1 = lv_obj_create(ui_screen);
+    ui_label_icon1 = lv_label_create(ui_panel1);
     ui_label1 = lv_label_create(ui_panel1);
     ui_list = lv_list_create(ui_screen);
     ui_panel2 = lv_obj_create(ui_screen);
-
     ui_label2 = lv_label_create(ui_panel2);
     ui_label3 = lv_label_create(ui_panel2);
 
     lv_scr_load(ui_screen);
     lv_obj_set_scrollbar_mode(ui_screen, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_add_style(ui_screen, &ui_style_widgets_default, LV_PART_MAIN);
 
     lv_obj_set_size(ui_panel1, lv_pct(100), 50);
     lv_obj_set_align(ui_panel1, LV_ALIGN_TOP_LEFT);
     lv_obj_set_scrollbar_mode(ui_panel1, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_set_layout(ui_panel1, LV_LAYOUT_FLEX);
+    lv_obj_set_flex_flow(ui_panel1, LV_FLEX_FLOW_ROW);
+    lv_obj_add_style(ui_panel1, &ui_style_widgets_default, LV_PART_MAIN);
+
+    lv_obj_set_align(ui_label_icon1, LV_ALIGN_LEFT_MID);
+    lv_label_set_text(ui_label_icon1, LV_SYMBOL_DRIVE);
+    lv_obj_set_style_text_color(ui_label_icon1, lv_color_white(), LV_PART_MAIN);
 
     lv_label_set_long_mode(ui_label1, LV_LABEL_LONG_SCROLL_CIRCULAR);
     lv_obj_set_width(ui_label1, lv_pct(100));
     lv_obj_set_align(ui_label1, LV_ALIGN_LEFT_MID);
+    lv_obj_set_style_text_color(ui_label1, lv_color_white(), LV_PART_MAIN); 
 
     lv_obj_set_align(ui_list, LV_ALIGN_TOP_LEFT);
     lv_obj_set_size(ui_list, lv_pct(100), 370);
     lv_obj_set_scrollbar_mode(ui_list, LV_SCROLLBAR_MODE_AUTO);
+    lv_obj_add_style(ui_list, &ui_style_widgets_default, LV_PART_MAIN);
 
     lv_obj_set_align(ui_panel2, LV_ALIGN_BOTTOM_LEFT);
     lv_obj_set_size(ui_panel2, lv_pct(100), 50);
     lv_obj_set_scrollbar_mode(ui_panel2, LV_SCROLLBAR_MODE_OFF);
     lv_obj_set_layout(ui_panel2, LV_LAYOUT_FLEX);
     lv_obj_set_flex_flow(ui_panel2, LV_FLEX_FLOW_ROW);
+    lv_obj_add_style(ui_panel2, &ui_style_widgets_default, LV_PART_MAIN);
 
     lv_label_set_text(ui_label2, "Total:");
     lv_obj_set_align(ui_label2, LV_ALIGN_LEFT_MID);
+    lv_obj_set_style_text_color(ui_label2, lv_color_white(), LV_PART_MAIN); 
+
     lv_obj_set_align(ui_label3, LV_ALIGN_LEFT_MID);
+    lv_obj_set_style_text_color(ui_label3, lv_color_white(), LV_PART_MAIN); 
 }
