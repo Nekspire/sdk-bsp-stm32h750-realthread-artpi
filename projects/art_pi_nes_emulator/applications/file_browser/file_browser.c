@@ -7,6 +7,7 @@ uint32_t path_size = 0;
 uint32_t dir_pos = 0;
 uint32_t dir_pos_max = 0;
 uint32_t dir_offset = 0;
+DIR dir;
 
 static void path_add_dir(const char* txt)
 {
@@ -90,7 +91,7 @@ static void path_remove_dir()
     }
 }
 
-static void dir_read (DIR* dirp)
+static void dir_read(DIR* dirp)
 {
     struct dirent *entp;
     uint32_t cnt = 0;
@@ -129,14 +130,15 @@ static void dir_read (DIR* dirp)
             dir_pos_max = dir_offset * (cnt - 1);
         }
         ui_dir_add_count(__itoa(cnt, cnt_str, 10));
-        rt_kprintf("[dir_read] dir_pos_max = %u\n", dir_pos_max);
         rewinddir(dirp);
     }
 }
 
-static void dir_scroll_down(DIR *rootp, DIR *dirp)
+void file_browser_dir_next(DIR *rootp)
 {
     struct dirent *entp;
+
+    ui_dir_focus_next();
 
     if (dir_pos == dir_pos_max)
     {
@@ -153,17 +155,19 @@ static void dir_scroll_down(DIR *rootp, DIR *dirp)
     }
     else
     {
-        entp = readdir(dirp);  
+        entp = readdir(&dir);  
     }
     if (entp != NULL)
     {
-        rt_kprintf("[dir_scroll_down] dir_pos = %u\n", dir_pos);
+        rt_kprintf("[file_browser_dir_next] dir_pos = %u\n", dir_pos);
     }
 }
 
-static void dir_scroll_up(DIR *rootp, DIR *dirp)
+void file_browser_dir_prev(DIR *rootp)
 {
     struct dirent *entp;
+
+    ui_dir_focus_prev();
 
     if (dir_pos == 0)
     {
@@ -180,15 +184,15 @@ static void dir_scroll_up(DIR *rootp, DIR *dirp)
     }
     else
     {
-        seekdir(dirp, dir_pos); 
+        seekdir(&dir, dir_pos); 
     }
     if (entp != NULL)
     {
-        rt_kprintf("[dir_scroll_up] dir_pos = %u\n", dir_pos);
+        rt_kprintf("[file_browser_dir_prev] dir_pos = %u\n", dir_pos);
     }
 }
 
-static void dir_open(DIR *rootp, DIR *dirp)
+void file_browser_dir_open(DIR *rootp)
 {
     struct dirent *entp;
 
@@ -199,7 +203,7 @@ static void dir_open(DIR *rootp, DIR *dirp)
     }
     else
     {
-        entp = readdir(dirp);
+        entp = readdir(&dir);
     }
     if (NULL != entp)
     {
@@ -207,16 +211,16 @@ static void dir_open(DIR *rootp, DIR *dirp)
         {
             path_add_dir(entp->d_name);
 
-            rt_kprintf("[dir_open] %s\n", entp->d_name);
-            rt_kprintf("[dir_open] path: %s\n", pathp);
-            rt_kprintf("[dir_open] path_cnt: %u\n", path_cnt);
+            rt_kprintf("[file_browser_dir_open] %s\n", entp->d_name);
+            rt_kprintf("[file_browser_dir_open] path: %s\n", pathp);
+            rt_kprintf("[file_browser_dir_open] path_cnt: %u\n", path_cnt);
 
             DIR *p = opendir(pathp);
             
             if (NULL != p)
             {
-                *dirp = *p;
-                dir_read(dirp);  
+                dir = *p;
+                dir_read(&dir);  
             }
         }
         else
@@ -226,14 +230,14 @@ static void dir_open(DIR *rootp, DIR *dirp)
     }
 }
 
-static void dir_close(DIR *rootp, DIR *dirp)
+void file_browser_dir_close(DIR *rootp)
 {
     if (0 != path_cnt)
     {
         path_remove_dir();
 
-        rt_kprintf("[dir_close] path: %s\n", pathp);
-        rt_kprintf("[dir_close] path_cnt: %u\n", path_cnt);
+        rt_kprintf("[file_browser_dir_close] path: %s\n", pathp);
+        rt_kprintf("[file_browser_dir_close] path_cnt: %u\n", path_cnt);
 
         if (0 == path_cnt)
         {
@@ -245,19 +249,19 @@ static void dir_close(DIR *rootp, DIR *dirp)
                 
             if (NULL != p)
             {
-                *dirp = *p;
-                dir_read(dirp);
+                dir = *p;
+                dir_read(&dir);
             }
         }
     }
 }
 
-DIR * file_browser_init(lv_indev_t *indevp, lv_indev_type_t type)
+DIR * file_browser_init(lv_indev_t *indevp, lv_indev_type_t type, lv_event_cb_t *eventp)
 { 
     static DIR *rootp;
 
     /* Initialize file browser ui */
-    ui_init(indevp, type);
+    ui_init(indevp, eventp, type);
 
     /* Reserve memory for root path string */
     path_size += sizeof("/");
@@ -281,47 +285,4 @@ DIR * file_browser_init(lv_indev_t *indevp, lv_indev_type_t type)
     }
     
     return rootp;
-}
-
-void file_browser_run(DIR *rootp)
-{ 
-    static DIR dir;
-
-    if (NULL != rootp)
-    {
-        switch (ui_event)
-        {
-            case UI_EVENT_NONE:
-
-                break;
-
-            case UI_EVENT_DOWN:
-
-                dir_scroll_down(rootp, &dir);
-                ui_event = UI_EVENT_NONE;
-                break;
-        
-            case UI_EVENT_UP:
-
-                dir_scroll_up(rootp, &dir);
-                ui_event = UI_EVENT_NONE;
-                break;
-
-            case UI_EVENT_OPEN:
-
-                dir_open(rootp, &dir);
-                ui_event = UI_EVENT_NONE;
-                break;
-            
-            case UI_EVENT_CLOSE:
-                
-                dir_close(rootp, &dir);
-                ui_event = UI_EVENT_NONE;
-                break;
-
-            default:
-
-                break;
-        }
-    }
 }

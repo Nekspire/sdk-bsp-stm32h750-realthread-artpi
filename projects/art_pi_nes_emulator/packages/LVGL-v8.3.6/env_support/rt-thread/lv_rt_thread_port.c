@@ -32,6 +32,7 @@ extern void lv_port_disp_init(void);
 extern void lv_user_gui_init(void);
 
 static struct rt_thread lvgl_thread;
+static DIR *rootp;
 
 #ifdef rt_align
 rt_align(RT_ALIGN_SIZE)
@@ -47,9 +48,34 @@ static void lv_rt_log(const char *buf)
 }
 #endif /* LV_USE_LOG */
 
+static void event_key_handler_cb(lv_event_cb_t *e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t *event_button = lv_event_get_current_target(e);
+
+    if (event_code == LV_EVENT_KEY && lv_event_get_key(e) == LV_KEY_DOWN)
+    {
+        file_browser_dir_next(rootp);
+    }
+
+    if (event_code == LV_EVENT_KEY && lv_event_get_key(e) == LV_KEY_UP)
+    {
+        file_browser_dir_prev(rootp);
+    }
+
+    if (event_code == LV_EVENT_KEY && lv_event_get_key(e) == LV_KEY_ENTER)
+    {
+        file_browser_dir_open(rootp);
+    }
+
+    if (event_code == LV_EVENT_KEY && lv_event_get_key(e) == LV_KEY_ESC)
+    {
+        file_browser_dir_close(rootp);
+    }
+}
+
 static void lvgl_thread_entry(void *parameter)
 {
-    static DIR *rootp;
 
 #if LV_USE_LOG
     lv_log_register_print_cb(lv_rt_log);
@@ -59,18 +85,13 @@ static void lvgl_thread_entry(void *parameter)
     lv_user_gui_init();
 
     lv_port_indev_t lv_port_indev = lv_port_indev_init();
-    rootp = file_browser_init(lv_port_indev.indevp, lv_port_indev.indev_drv.type);
+    rootp = file_browser_init(lv_port_indev.indevp, lv_port_indev.indev_drv.type, event_key_handler_cb);
 
     /* handle the tasks of LVGL */
     while(1)
     {
         lv_task_handler();
         rt_thread_mdelay(LV_DISP_DEF_REFR_PERIOD);
-
-        if (NULL != rootp)
-        {
-            file_browser_run(rootp);
-        }        
     }
 }
 

@@ -28,35 +28,7 @@ lv_obj_t *ui_label_icon1;
 
 lv_group_t *ui_group;
 
-ui_event_t ui_event = UI_EVENT_NONE;
-
-static void event_key_handler_cb(lv_event_cb_t *e)
-{
-    lv_event_code_t event_code = lv_event_get_code(e);
-    lv_obj_t *event_button = lv_event_get_current_target(e);
-
-    if (event_code == LV_EVENT_KEY && lv_event_get_key(e) == LV_KEY_DOWN)
-    {
-        lv_group_focus_next(ui_group);
-        ui_event = UI_EVENT_DOWN;
-    }
-
-    if (event_code == LV_EVENT_KEY && lv_event_get_key(e) == LV_KEY_UP)
-    {
-        lv_group_focus_prev(ui_group);
-        ui_event = UI_EVENT_UP;
-    }
-
-    if (event_code == LV_EVENT_KEY && lv_event_get_key(e) == LV_KEY_ENTER)
-    {
-        ui_event = UI_EVENT_OPEN;
-    }
-
-    if (event_code == LV_EVENT_KEY && lv_event_get_key(e) == LV_KEY_ESC)
-    {
-        ui_event = UI_EVENT_CLOSE;
-    }
-}
+lv_event_cb_t *ui_list_button_event_cb;
 
 void ui_set_path(const char *path)
 {
@@ -90,7 +62,7 @@ void ui_dir_add_entity(ui_list_entity_t type, const char *txt)
     lv_obj_add_style(ui_list_button, &ui_style_widgets_default, LV_PART_MAIN);
 
     lv_group_add_obj(ui_group, ui_list_button);
-    lv_obj_add_event_cb(ui_list_button, event_key_handler_cb, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_list_button, ui_list_button_event_cb, LV_EVENT_ALL, NULL);
 }
 
 void ui_empty_dir_add_entity(void)
@@ -102,7 +74,7 @@ void ui_empty_dir_add_entity(void)
     ui_list_button = lv_list_add_btn(ui_list, NULL, " ");
     lv_obj_set_size(ui_list_button, lv_pct(100), 50);
     lv_group_add_obj(ui_group, ui_list_button);
-    lv_obj_add_event_cb(ui_list_button, event_key_handler_cb, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_list_button, ui_list_button_event_cb, LV_EVENT_ALL, NULL);
 }
 
 void ui_dir_clear()
@@ -122,11 +94,21 @@ void ui_dir_add_count(const char *txt)
     lv_label_set_text(ui_label3, txt);
 }
 
-uint8_t ui_init(lv_indev_t *indevp, lv_indev_type_t type)
+void ui_dir_focus_next(void)
+{
+    lv_group_focus_next(ui_group);
+}
+
+void ui_dir_focus_prev(void)
+{
+    lv_group_focus_prev(ui_group);
+}
+
+uint8_t ui_init(lv_indev_t *indevp, lv_event_cb_t *ep, lv_indev_type_t type)
 {
     uint8_t ret = 1;
 
-    if (NULL != indevp)
+    if (NULL != indevp && NULL != ep)
     {
         ui_screen = lv_obj_create(NULL);
         ui_panel1 = lv_obj_create(ui_screen);
@@ -181,6 +163,7 @@ uint8_t ui_init(lv_indev_t *indevp, lv_indev_type_t type)
             if (type == UI_SUPPORTED_INDEV[i])
             {
                 ui_indevp = indevp;
+                ui_list_button_event_cb = ep;
                 ret = 0;
                 break;
             }

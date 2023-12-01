@@ -1,7 +1,9 @@
 #ifndef _UI_H
 #define _UI_H
 
+#include "file_browser.h"
 #include "lv_hal_indev.h"
+#include "lvgl.h"
 
 #ifdef __cplusplus
 extern "C" 
@@ -24,14 +26,14 @@ typedef enum
 } ui_event_t;
 
 
-uint8_t ui_init(lv_indev_t *indevp, lv_indev_type_t type);
+uint8_t ui_init(lv_indev_t *indevp, lv_event_cb_t *ep, lv_indev_type_t type);
 void ui_set_path(const char *path);
 void ui_dir_add_entity(ui_list_entity_t type, const char *name);
 void ui_dir_clear();
 void ui_empty_dir_add_entity(void);
 void ui_dir_add_count(const char *txt);
-
-extern ui_event_t ui_event;
+void ui_dir_focus_next(void);
+void ui_dir_focus_prev(void);
 
 #ifdef __cplusplus
 } /* extern "C" */
