@@ -50,25 +50,25 @@ static void lv_rt_log(const char *buf)
 
 static void event_key_handler_cb(lv_event_cb_t *e)
 {
-    lv_event_code_t event_code = lv_event_get_code(e);
-    lv_obj_t *event_button = lv_event_get_current_target(e);
+    lv_event_code_t event_code = lv_event_get_code((lv_event_t *) e);
+    lv_obj_t *event_button = lv_event_get_current_target((lv_event_t *) e);
 
-    if (event_code == LV_EVENT_KEY && lv_event_get_key(e) == LV_KEY_DOWN)
+    if (event_code == LV_EVENT_KEY && lv_event_get_key((lv_event_t *) e) == LV_KEY_DOWN)
     {
         file_browser_dir_next(rootp);
     }
 
-    if (event_code == LV_EVENT_KEY && lv_event_get_key(e) == LV_KEY_UP)
+    if (event_code == LV_EVENT_KEY && lv_event_get_key((lv_event_t *) e) == LV_KEY_UP)
     {
         file_browser_dir_prev(rootp);
     }
 
-    if (event_code == LV_EVENT_KEY && lv_event_get_key(e) == LV_KEY_ENTER)
+    if (event_code == LV_EVENT_KEY && lv_event_get_key((lv_event_t *) e) == LV_KEY_ENTER)
     {
         file_browser_dir_open(rootp);
     }
 
-    if (event_code == LV_EVENT_KEY && lv_event_get_key(e) == LV_KEY_ESC)
+    if (event_code == LV_EVENT_KEY && lv_event_get_key((lv_event_t *) e) == LV_KEY_ESC)
     {
         file_browser_dir_close(rootp);
     }
@@ -82,10 +82,9 @@ static void lvgl_thread_entry(void *parameter)
 #endif /* LV_USE_LOG */
     lv_init();
     lv_port_disp_init();
-    lv_user_gui_init();
 
     lv_port_indev_t lv_port_indev = lv_port_indev_init();
-    rootp = file_browser_init(lv_port_indev.indevp, lv_port_indev.indev_drv.type, event_key_handler_cb);
+    rootp = file_browser_init(lv_port_indev.indevp, lv_port_indev.indev_drv.type, (lv_event_cb_t *) event_key_handler_cb);
 
     /* handle the tasks of LVGL */
     while(1)
