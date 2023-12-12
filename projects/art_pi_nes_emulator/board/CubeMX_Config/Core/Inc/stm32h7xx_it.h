@@ -59,6 +59,8 @@ void SysTick_Handler(void);
 void SDMMC1_IRQHandler(void);
 void ETH_IRQHandler(void);
 void DMA2D_IRQHandler(void);
+void I2C4_EV_IRQHandler(void);
+void I2C4_ER_IRQHandler(void);
 void OTG_FS_IRQHandler(void);
 void SDMMC2_IRQHandler(void);
 /* USER CODE BEGIN EFP */
@@ -70,5 +72,3 @@ void SDMMC2_IRQHandler(void);
 #endif
 
 #endif /* __STM32H7xx_IT_H */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
