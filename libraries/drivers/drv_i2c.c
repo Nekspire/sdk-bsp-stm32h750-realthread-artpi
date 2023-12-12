@@ -5,13 +5,21 @@
 
 #ifdef RT_USING_I2C
 
-// #define DRV_DEBUG
-#define LOG_TAG              "drv.i2c"
+#define DRV_DEBUG
+#define LOG_TAG "drv.i2c"
+#define LOG_LVL LOG_LVL_DBG
 #include <drv_log.h>
 
 #if !defined(BSP_USING_I2C4)
 #error "Please define at least one BSP_USING_I2Cx"
 #endif
+
+enum
+{
+#ifdef BSP_USING_I2C4
+    I2C4_INDEX,
+#endif
+};
 
 static I2C_HandleTypeDef i2c_config[] =
 {
@@ -36,24 +44,30 @@ static rt_size_t stm32_i2c_xfer(struct rt_i2c_bus_device *bus, struct rt_i2c_msg
     rt_uint32_t i;
     rt_err_t ret = -RT_ERROR;
 
-    struct gd32_i2c_bus *gd32_i2c = (struct gd32_i2c_bus *)bus;
-
     for (i = 0; i < num; i++)
     {
         msg = &msgs[i];
 
         if (msg->flags & RT_I2C_RD)
         {
-            if (HAL_I2C_Master_Receive(&stm32_i2c_obj[i].handler, msg->addr, msg->buf, msg->len, HAL_MAX_DELAY) != HAL_OK)
+            if (HAL_OK != HAL_I2C_Master_Receive_IT(&stm32_i2c_obj[i].handler, msg->addr, msg->buf, msg->len))
             {
-                LOG_E("i2c bus write failed,i2c bus stop!");
+                LOG_E("i2c bus read failed, i2c bus stop!");
+            }
+            else
+            {
+                while (HAL_I2C_GetState(&stm32_i2c_obj[i].handler) != HAL_I2C_STATE_READY);
             }
         }
         else
         {
-            if (HAL_I2C_Master_Transmit(&stm32_i2c_obj[i].handler, msg->addr, msg->buf, msg->len, HAL_MAX_DELAY) != HAL_OK)
+            if (HAL_OK != HAL_I2C_Master_Transmit_IT(&stm32_i2c_obj[i].handler, msg->addr, msg->buf, msg->len))
             {
-                LOG_E("i2c bus write failed,i2c bus stop!");
+                LOG_E("i2c bus write failed, i2c bus stop!");
+            }
+            else
+            {
+                while (HAL_I2C_GetState(&stm32_i2c_obj[i].handler) != HAL_I2C_STATE_READY);
             }
         }
     }
@@ -102,6 +116,7 @@ static int stm32_i2c_init(void)
         else
         {
             stm32_i2c_obj[i].bus.ops = &i2c_ops;
+
             /* register i2c device */
             if (rt_i2c_bus_device_register(&stm32_i2c_obj[i].bus, name_buf) == RT_EOK)
             {
@@ -116,6 +131,20 @@ static int stm32_i2c_init(void)
     }
 
     return RT_EOK;
+}
+
+void I2C4_EV_IRQHandler(void)
+{
+    rt_interrupt_enter();
+    HAL_I2C_EV_IRQHandler(&stm32_i2c_obj[I2C4_INDEX].handler);
+    rt_interrupt_leave();
+}
+
+void I2C4_ER_IRQHandler(void)
+{
+    rt_interrupt_enter();
+    HAL_I2C_ER_IRQHandler(&stm32_i2c_obj[I2C4_INDEX].handler);
+    rt_interrupt_leave();
 }
 
 INIT_BOARD_EXPORT(stm32_i2c_init);
