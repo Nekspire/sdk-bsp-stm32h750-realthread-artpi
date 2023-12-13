@@ -8,6 +8,7 @@ uint32_t dir_pos = 0;
 uint32_t dir_pos_max = 0;
 uint32_t dir_offset = 0;
 DIR dir;
+uint8_t file_open_lock = 0;
 
 static void path_add_dir(const char* txt)
 {
@@ -134,32 +135,85 @@ static void dir_read(DIR* dirp)
     }
 }
 
+static void path_add_file(const char* txt)
+{
+    path_add_dir(txt);
+}
+
+static void path_remove_file()
+{
+    path_remove_dir();
+}
+
+static void file_read(char *file_name, void (*fopen_cb)(), void *buff, uint32_t len)
+{
+    int fd, size;
+
+    path_add_file(file_name);
+    fd = open(pathp, O_RDONLY);
+    rt_kprintf("[file_read] path: %s\n", pathp);
+    path_remove_file();
+
+    if (fd >= 0)
+    {
+        size = read(fd, buff, len);
+        close(fd);
+
+        if (size < 0)
+        {
+            rt_kprintf("[file_read] error: file read failed\n");
+        }
+        else
+        {
+            file_open_lock = 1;
+            rt_kprintf("[file_read] name: %s\n", file_name);
+            rt_kprintf("[file_read] size = %d\n", size);
+            
+            if (fopen_cb != NULL)
+            {
+                fopen_cb();
+            }
+            else
+            {
+                rt_kprintf("[file_read] error: file_browser_open_file_handle_cb NULL\n");
+            }
+        }
+    }
+    else
+    {
+        rt_kprintf("[file_read] error: file open failed\n");
+    }
+}
+
 void file_browser_dir_next(DIR *rootp)
 {
     struct dirent *entp;
 
-    ui_dir_focus_next();
+    if (file_open_lock == 0)
+    {
+        ui_dir_focus_next();
 
-    if (dir_pos == dir_pos_max)
-    {
-        dir_pos = 0;
-    }
-    else
-    {
-        dir_pos += dir_offset;
-    }
-    if (0 == path_cnt)
-    {
-        /* use root pointer */
-        entp = readdir(rootp);
-    }
-    else
-    {
-        entp = readdir(&dir);  
-    }
-    if (entp != NULL)
-    {
-        rt_kprintf("[file_browser_dir_next] dir_pos = %u\n", dir_pos);
+        if (dir_pos == dir_pos_max)
+        {
+            dir_pos = 0;
+        }
+        else
+        {
+            dir_pos += dir_offset;
+        }
+        if (0 == path_cnt)
+        {
+            /* use root pointer */
+            entp = readdir(rootp);
+        }
+        else
+        {
+            entp = readdir(&dir);  
+        }
+        if (entp != NULL)
+        {
+            rt_kprintf("[file_browser_dir_next] dir_pos = %u\n", dir_pos);
+        }
     }
 }
 
@@ -167,65 +221,72 @@ void file_browser_dir_prev(DIR *rootp)
 {
     struct dirent *entp;
 
-    ui_dir_focus_prev();
+    if (file_open_lock == 0)
+    {
+        ui_dir_focus_prev();
 
-    if (dir_pos == 0)
-    {
-        dir_pos = dir_pos_max;
-    }
-    else
-    {
-        dir_pos -= dir_offset;
-    }
-    if (0 == path_cnt)
-    {
-        /* use root pointer */
-        seekdir(rootp, dir_pos);
-    }
-    else
-    {
-        seekdir(&dir, dir_pos); 
-    }
-    if (entp != NULL)
-    {
-        rt_kprintf("[file_browser_dir_prev] dir_pos = %u\n", dir_pos);
-    }
-}
-
-void file_browser_dir_open(DIR *rootp)
-{
-    struct dirent *entp;
-
-    if (0 == path_cnt)
-    {
-        /* use root pointer */
-        entp = readdir(rootp);
-    }
-    else
-    {
-        entp = readdir(&dir);
-    }
-    if (NULL != entp)
-    {
-        if (FT_DIRECTORY == entp->d_type)
+        if (dir_pos == 0)
         {
-            path_add_dir(entp->d_name);
-
-            rt_kprintf("[file_browser_dir_open] %s\n", entp->d_name);
-            rt_kprintf("[file_browser_dir_open] path: %s\n", pathp);
-            rt_kprintf("[file_browser_dir_open] path_cnt: %u\n", path_cnt);
-
-            DIR *p = opendir(pathp);
-            
-            if (NULL != p)
-            {
-                dir = *p;
-                dir_read(&dir);  
-            }
+            dir_pos = dir_pos_max;
         }
         else
         {
-            /* TODO */ 
+            dir_pos -= dir_offset;
+        }
+        if (0 == path_cnt)
+        {
+            /* use root pointer */
+            seekdir(rootp, dir_pos);
+        }
+        else
+        {
+            seekdir(&dir, dir_pos); 
+        }
+        if (entp != NULL)
+        {
+            rt_kprintf("[file_browser_dir_prev] dir_pos = %u\n", dir_pos);
+        }
+    }
+}
+
+void file_browser_open(DIR *rootp, void (*fopen_cb)(), void *buff, uint32_t len)
+{
+    struct dirent *entp;
+
+    if (file_open_lock == 0)
+    {
+        if (0 == path_cnt)
+        {
+            /* use root pointer */
+            entp = readdir(rootp);
+        }
+        else
+        {
+            entp = readdir(&dir);
+        }
+        if (NULL != entp)
+        {
+            if (FT_DIRECTORY == entp->d_type)
+            {
+                path_add_dir(entp->d_name);
+
+                rt_kprintf("[file_browser_dir_open] %s\n", entp->d_name);
+                rt_kprintf("[file_browser_dir_open] path: %s\n", pathp);
+                rt_kprintf("[file_browser_dir_open] path_cnt: %u\n", path_cnt);
+
+                DIR *p = opendir(pathp);
+                
+                if (NULL != p)
+                {
+                    dir = *p;
+                    dir_read(&dir);  
+                }
+            }
+            else if ((FT_REGULAR == entp->d_type) || (FT_SOCKET == entp->d_type) || (FT_USER == entp->d_type))
+            {
+                file_read(entp->d_name, fopen_cb, buff, len);
+            }
+            
         }
     }
 }
@@ -234,23 +295,31 @@ void file_browser_dir_close(DIR *rootp)
 {
     if (0 != path_cnt)
     {
-        path_remove_dir();
-
-        rt_kprintf("[file_browser_dir_close] path: %s\n", pathp);
-        rt_kprintf("[file_browser_dir_close] path_cnt: %u\n", path_cnt);
-
-        if (0 == path_cnt)
+        if (file_open_lock == 1)
         {
-            dir_read(rootp);
+            file_open_lock = 0;
+            dir_read(&dir);
         }
         else
         {
-            DIR *p = opendir(pathp);
-                
-            if (NULL != p)
+            path_remove_dir();
+
+            rt_kprintf("[file_browser_dir_close] path: %s\n", pathp);
+            rt_kprintf("[file_browser_dir_close] path_cnt: %u\n", path_cnt);
+
+            if (0 == path_cnt)
             {
-                dir = *p;
-                dir_read(&dir);
+                dir_read(rootp);
+            }
+            else
+            {
+                DIR *p = opendir(pathp);
+                    
+                if (NULL != p)
+                {
+                    dir = *p;
+                    dir_read(&dir);
+                }
             }
         }
     }

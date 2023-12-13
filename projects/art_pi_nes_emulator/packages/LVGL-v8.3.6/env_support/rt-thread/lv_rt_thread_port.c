@@ -48,8 +48,16 @@ static void lv_rt_log(const char *buf)
 }
 #endif /* LV_USE_LOG */
 
+static void f_open_cb()
+{
+    rt_kprintf("[f_open_cb] Callback\n");
+    //
+}
+
 static void event_key_handler_cb(lv_event_cb_t *e)
 {
+    uint8_t f_buff[100];
+
     lv_event_code_t event_code = lv_event_get_code((lv_event_t *) e);
     lv_obj_t *event_button = lv_event_get_current_target((lv_event_t *) e);
 
@@ -65,7 +73,7 @@ static void event_key_handler_cb(lv_event_cb_t *e)
 
     if (event_code == LV_EVENT_KEY && lv_event_get_key((lv_event_t *) e) == LV_KEY_ENTER)
     {
-        file_browser_dir_open(rootp);
+        file_browser_open(rootp, f_open_cb, f_buff, sizeof(f_buff));
     }
 
     if (event_code == LV_EVENT_KEY && lv_event_get_key((lv_event_t *) e) == LV_KEY_ESC)
