@@ -150,6 +150,7 @@ static void file_read(char *file_name, void (*fopen_cb)(), void *buff, uint32_t 
     int fd, size;
 
     path_add_file(file_name);
+    ui_set_path(pathp);
     fd = open(pathp, O_RDONLY);
     rt_kprintf("[file_read] path: %s\n", pathp);
     path_remove_file();
@@ -161,6 +162,7 @@ static void file_read(char *file_name, void (*fopen_cb)(), void *buff, uint32_t 
 
         if (size < 0)
         {
+            ui_set_path(pathp);
             rt_kprintf("[file_read] error: file read failed\n");
         }
         else
@@ -181,6 +183,7 @@ static void file_read(char *file_name, void (*fopen_cb)(), void *buff, uint32_t 
     }
     else
     {
+        ui_set_path(pathp);
         rt_kprintf("[file_read] error: file open failed\n");
     }
 }
