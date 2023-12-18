@@ -1,0 +1,13 @@
+from building import *
+
+cwd = GetCurrentDir()
+
+src = Glob('*.c')
+src += Glob('ui/*.c')
+
+path = [cwd]
+path += [cwd + '/ui']
+
+group = DefineGroup('nofrendo_port', src, depend = [''], CPPPATH = path)
+
+Return('group')

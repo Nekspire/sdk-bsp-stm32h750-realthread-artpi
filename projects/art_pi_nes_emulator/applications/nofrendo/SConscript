@@ -1,0 +1,21 @@
+from building import *
+
+cwd = GetCurrentDir()
+
+src = Glob('*.c')
+src += Glob('cpu/*.c')
+src += Glob('libsnss/*.c')
+src += Glob('mappers/*.c')
+src += Glob('nes/*.c')
+src += Glob('sndhrdw/*.c')
+
+path = [cwd]
+path += [cwd + '/cpu']
+path += [cwd + '/libsnss']
+path += [cwd + '/mappers']
+path += [cwd + '/nes']
+path += [cwd + '/sndhrdw']
+
+group = DefineGroup('nofrendo', src, depend = [''], CPPPATH = path)
+
+Return('group')
