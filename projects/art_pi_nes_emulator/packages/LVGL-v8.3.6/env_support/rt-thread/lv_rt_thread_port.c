@@ -35,6 +35,7 @@ extern void lv_user_gui_init(void);
 static struct rt_thread lvgl_thread;
 static DIR *rootp;
 static file_browser_file_t fb_file;
+static uint8_t fb_file_buff[1024];
 
 #ifdef rt_align
 rt_align(RT_ALIGN_SIZE)
@@ -50,35 +51,24 @@ static void lv_rt_log(const char *buf)
 }
 #endif /* LV_USE_LOG */
 
-char *osd_getromdata() 
-{
-	char* romdata;
-	const esp_partition_t* part;
-	spi_flash_mmap_handle_t hrom;
-	esp_err_t err;
-	nvs_flash_init();
-	part=esp_partition_find_first(0x40, 1, NULL);
-	if (part==0) printf("Couldn't find rom part!\n");
-	err=esp_partition_mmap(part, 0, 3*1024*1024, SPI_FLASH_MMAP_DATA, (const void**)&romdata, &hrom);
-	if (err!=ESP_OK) printf("Couldn't map rom part!\n");
-	printf("Initialized. ROM@%p\n", romdata);
-    return (char*)romdata;
-}
-
 static void f_open_cb()
 {
+    char *fs;
+    const char sufoption1[] = ".NES";
+    const char sufoption2[] = ".nes";
+
     if (fb_file.fopen_file_name != NULL)
     {
         rt_kprintf("[f_open_cb] File name: %s\n", fb_file.fopen_file_name);
         rt_kprintf("[f_open_cb] File size: %u KB\n", fb_file.fopen_size / 1024);
 
         /* Case sensitive option 1 */
-        char *fs = strstr(fb_file.fopen_file_name, ".NES");
+        fs = strstr(fb_file.fopen_file_name, sufoption1);
 
         if (fs == NULL)
         {
             /* Case sensitive option 2 */
-            char *fs = strstr(fb_file.fopen_file_name, ".nes");
+            fs = strstr(fb_file.fopen_file_name, sufoption2);
         }
         if (fs == NULL)
         {
@@ -95,12 +85,6 @@ static void f_open_cb()
 
 static void event_key_handler_cb(lv_event_cb_t *e)
 {
-    uint8_t f_buff[1024];
- 
-    fb_file.fopen_cb = f_open_cb;
-    fb_file.fopen_read_buffer = f_buff;
-    fb_file.fopen_read_buff_len = sizeof(f_buff);
-
     lv_event_code_t event_code = lv_event_get_code((lv_event_t *) e);
     lv_obj_t *event_button = lv_event_get_current_target((lv_event_t *) e);
 
@@ -133,6 +117,10 @@ static void lvgl_thread_entry(void *parameter)
 #endif /* LV_USE_LOG */
     lv_init();
     lv_port_disp_init();
+
+    fb_file.fopen_cb = f_open_cb;
+    fb_file.fopen_read_buffer = fb_file_buff;
+    fb_file.fopen_read_buff_len = sizeof(fb_file_buff);
 
     lv_port_indev_t lv_port_indev = lv_port_indev_init();
     rootp = file_browser_init(lv_port_indev.indevp, lv_port_indev.indev_drv.type, (lv_event_cb_t *) event_key_handler_cb);

@@ -2,6 +2,7 @@
 #define _EMULATOR_UI_H_
 
 #include <lvgl.h>
+#include <bitmap.h>
 
 void emulator_ui_init(uint32_t w, uint32_t h);
 void emulator_ui_bitmap_draw(bitmap_t *bmp);

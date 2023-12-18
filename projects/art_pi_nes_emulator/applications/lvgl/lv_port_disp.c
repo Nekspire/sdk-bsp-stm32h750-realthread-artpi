@@ -20,11 +20,12 @@
     #define COLOR_BUFFER  (LV_HOR_RES_MAX * LV_VER_RES_MAX / 5)
 #else
     #include <lcd_port.h>
-    #define COLOR_BUFFER  (LV_HOR_RES_MAX * LV_VER_RES_MAX / 2)
+    #define COLOR_BUFFER  (LV_HOR_RES_MAX * LV_VER_RES_MAX)
 #endif
 
 static lv_disp_drv_t disp_drv;
 static lv_disp_draw_buf_t disp_buf;
+__IO uint16_t *disp_frame_buf_addr = 0xC0000800;
 
 #ifdef BSP_USING_LCD_RGB
 static DMA2D_HandleTypeDef hdma2d;
@@ -115,8 +116,6 @@ void lv_port_disp_init(void)
 {
     rt_err_t result;
 
-    static lv_color_t lv_disp_buf1[COLOR_BUFFER];
-
 #ifdef BSP_USING_LCD_RGB
     rt_device_t lcd_device = rt_device_find("lcd");
     result = rt_device_open(lcd_device, 0);
@@ -151,7 +150,7 @@ void lv_port_disp_init(void)
 #endif
 
     /*Initialize `disp_buf` with the buffer(s). With only one buffer use NULL instead buf_2 */
-    lv_disp_draw_buf_init(&disp_buf, lv_disp_buf1, RT_NULL, COLOR_BUFFER);
+    lv_disp_draw_buf_init(&disp_buf, disp_frame_buf_addr, RT_NULL, COLOR_BUFFER);
 
     /*Basic initialization*/
     lv_disp_drv_init(&disp_drv);

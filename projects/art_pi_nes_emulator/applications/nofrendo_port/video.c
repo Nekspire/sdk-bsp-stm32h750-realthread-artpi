@@ -1,7 +1,5 @@
 #include <rtthread.h>
 
-#include <math.h>
-
 #include <osd.h>
 #include <nes.h>
 
@@ -35,18 +33,6 @@ viddriver_t vid_drv =
    custom_blit,
    false
 };
-
-static int round(double value)
-{
-   int upper, lower;
-   upper = (int) ceil(value);
-   lower = (int) floor(value);
-
-   if (upper - value > value - lower)
-      return lower;
-   else
-      return upper;
-}
 
 /* set a video mode */
 static int set_mode(int width, int height)

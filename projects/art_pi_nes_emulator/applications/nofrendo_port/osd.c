@@ -1,4 +1,5 @@
 #include <string.h>
+#include <math.h>
 
 #include <rtthread.h>
 
@@ -32,7 +33,7 @@ int osd_main(int argc, char *argv[])
    config.filename = cfg_filename;
 
    /* all done */
-   return main_loop("rom", system_autodetect);
+   return main_loop(argv[1], system_autodetect);
 }
 
 /* File system interface */
