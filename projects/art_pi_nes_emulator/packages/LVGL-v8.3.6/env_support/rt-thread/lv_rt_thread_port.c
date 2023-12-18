@@ -15,6 +15,7 @@
 #include <rtthread.h>
 #include <file_browser.h>
 #include <lv_port_indev.h>
+#include <nofrendo/nofrendo.h>
 
 #define DBG_TAG    "LVGL"
 #define DBG_LVL    DBG_INFO
@@ -49,13 +50,46 @@ static void lv_rt_log(const char *buf)
 }
 #endif /* LV_USE_LOG */
 
+char *osd_getromdata() 
+{
+	char* romdata;
+	const esp_partition_t* part;
+	spi_flash_mmap_handle_t hrom;
+	esp_err_t err;
+	nvs_flash_init();
+	part=esp_partition_find_first(0x40, 1, NULL);
+	if (part==0) printf("Couldn't find rom part!\n");
+	err=esp_partition_mmap(part, 0, 3*1024*1024, SPI_FLASH_MMAP_DATA, (const void**)&romdata, &hrom);
+	if (err!=ESP_OK) printf("Couldn't map rom part!\n");
+	printf("Initialized. ROM@%p\n", romdata);
+    return (char*)romdata;
+}
+
 static void f_open_cb()
 {
     if (fb_file.fopen_file_name != NULL)
     {
         rt_kprintf("[f_open_cb] File name: %s\n", fb_file.fopen_file_name);
-        fb_file.fopen_size /= 1024;
-        rt_kprintf("[f_open_cb] File size: %u KB\n", fb_file.fopen_size);
+        rt_kprintf("[f_open_cb] File size: %u KB\n", fb_file.fopen_size / 1024);
+
+        /* Case sensitive option 1 */
+        char *fs = strstr(fb_file.fopen_file_name, ".NES");
+
+        if (fs == NULL)
+        {
+            /* Case sensitive option 2 */
+            char *fs = strstr(fb_file.fopen_file_name, ".nes");
+        }
+        if (fs == NULL)
+        {
+            rt_kprintf("[f_open_cb] It's not NES file!\n");
+        }
+        else
+        {
+            rt_kprintf("[f_open_cb] nofrendo started\n");
+            nofrendo_main(0, NULL);
+            rt_kprintf("[f_open_cb] nofrendo stopped\n");
+        }
     }
 }
 
