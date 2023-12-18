@@ -33,6 +33,7 @@ extern void lv_user_gui_init(void);
 
 static struct rt_thread lvgl_thread;
 static DIR *rootp;
+static file_browser_file_t fb_file;
 
 #ifdef rt_align
 rt_align(RT_ALIGN_SIZE)
@@ -50,13 +51,21 @@ static void lv_rt_log(const char *buf)
 
 static void f_open_cb()
 {
-    rt_kprintf("[f_open_cb] Callback\n");
-    //
+    if (fb_file.fopen_file_name != NULL)
+    {
+        rt_kprintf("[f_open_cb] File name: %s\n", fb_file.fopen_file_name);
+        fb_file.fopen_size /= 1024;
+        rt_kprintf("[f_open_cb] File size: %u KB\n", fb_file.fopen_size);
+    }
 }
 
 static void event_key_handler_cb(lv_event_cb_t *e)
 {
-    uint8_t f_buff[100];
+    uint8_t f_buff[1024];
+ 
+    fb_file.fopen_cb = f_open_cb;
+    fb_file.fopen_read_buffer = f_buff;
+    fb_file.fopen_read_buff_len = sizeof(f_buff);
 
     lv_event_code_t event_code = lv_event_get_code((lv_event_t *) e);
     lv_obj_t *event_button = lv_event_get_current_target((lv_event_t *) e);
@@ -73,7 +82,7 @@ static void event_key_handler_cb(lv_event_cb_t *e)
 
     if (event_code == LV_EVENT_KEY && lv_event_get_key((lv_event_t *) e) == LV_KEY_ENTER)
     {
-        file_browser_open(rootp, f_open_cb, f_buff, sizeof(f_buff));
+        file_browser_open(rootp, &fb_file);
     }
 
     if (event_code == LV_EVENT_KEY && lv_event_get_key((lv_event_t *) e) == LV_KEY_ESC)

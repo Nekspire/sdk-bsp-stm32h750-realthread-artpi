@@ -145,46 +145,79 @@ static void path_remove_file()
     path_remove_dir();
 }
 
-static void file_read(char *file_name, void (*fopen_cb)(), void *buff, uint32_t len)
+static void file_read(char *file_name, file_browser_file_t *f_ctx)
 {
-    int fd, size;
+    int fd;
+    int size;
 
-    path_add_file(file_name);
-    ui_set_path(pathp);
-    fd = open(pathp, O_RDONLY);
-    rt_kprintf("[file_read] path: %s\n", pathp);
-    path_remove_file();
-
-    if (fd >= 0)
+    if (file_name != NULL)
     {
-        size = read(fd, buff, len);
-        close(fd);
-
-        if (size < 0)
+        if (f_ctx->fopen_file_name != NULL)
         {
-            ui_set_path(pathp);
-            rt_kprintf("[file_read] error: file read failed\n");
+            free(f_ctx->fopen_file_name);
+        }
+        
+        f_ctx->fopen_file_name = (char *)malloc(strlen(file_name) + 1);
+
+        if (f_ctx->fopen_file_name != NULL)
+        {
+            memcpy(f_ctx->fopen_file_name, file_name, strlen(file_name) + 1);
         }
         else
         {
-            file_open_lock = 1;
-            rt_kprintf("[file_read] name: %s\n", file_name);
-            rt_kprintf("[file_read] size = %d\n", size);
-            
-            if (fopen_cb != NULL)
+            rt_kprintf("[file_read] error: fopen_file_name NULL\n");
+        }
+
+        path_add_file(file_name);
+        ui_set_path(pathp);
+        fd = open(pathp, O_RDONLY);
+        rt_kprintf("[file_read] path: %s\n", pathp);
+        path_remove_file();
+
+        if (fd >= 0)
+        {
+            if (f_ctx->fopen_read_buffer != NULL)
             {
-                fopen_cb();
+                size = read(fd, f_ctx->fopen_read_buffer, f_ctx->fopen_read_buff_len);
+                close(fd);
+
+                if (size < 0)
+                {
+                    f_ctx->fopen_size = 0;
+                    ui_set_path(pathp);
+                    rt_kprintf("[file_read] error: file read failed\n");
+                }
+                else
+                {
+                    f_ctx->fopen_size = size;
+                    file_open_lock = 1;
+                    rt_kprintf("[file_read] name: %s\n", file_name);
+                    rt_kprintf("[file_read] size = %d\n", size);
+                    
+                    if (f_ctx->fopen_cb != NULL)
+                    {
+                        f_ctx->fopen_cb();
+                    }
+                    else
+                    {
+                        rt_kprintf("[file_read] error: file_browser_open_file_handle_cb NULL\n");
+                    }
+                }
             }
             else
             {
-                rt_kprintf("[file_read] error: file_browser_open_file_handle_cb NULL\n");
+                rt_kprintf("[file_read] error: fopen_read_buffer NULL\n");
             }
+        }
+        else
+        {
+            ui_set_path(pathp);
+            rt_kprintf("[file_read] error: file open failed\n");
         }
     }
     else
     {
-        ui_set_path(pathp);
-        rt_kprintf("[file_read] error: file open failed\n");
+        rt_kprintf("[file_read] error: file_name NULL\n");
     }
 }
 
@@ -252,7 +285,7 @@ void file_browser_dir_prev(DIR *rootp)
     }
 }
 
-void file_browser_open(DIR *rootp, void (*fopen_cb)(), void *buff, uint32_t len)
+void file_browser_open(DIR *rootp, file_browser_file_t *f_ctx)
 {
     struct dirent *entp;
 
@@ -271,11 +304,11 @@ void file_browser_open(DIR *rootp, void (*fopen_cb)(), void *buff, uint32_t len)
         {
             if (FT_DIRECTORY == entp->d_type)
             {
+                rt_kprintf("[file_browser_open] Directory: %s\n", entp->d_name);
                 path_add_dir(entp->d_name);
-
-                rt_kprintf("[file_browser_dir_open] %s\n", entp->d_name);
-                rt_kprintf("[file_browser_dir_open] path: %s\n", pathp);
-                rt_kprintf("[file_browser_dir_open] path_cnt: %u\n", path_cnt);
+            
+                rt_kprintf("[file_browser_open] path: %s\n", pathp);
+                rt_kprintf("[file_browser_open] path_cnt: %u\n", path_cnt);
 
                 DIR *p = opendir(pathp);
                 
@@ -287,7 +320,8 @@ void file_browser_open(DIR *rootp, void (*fopen_cb)(), void *buff, uint32_t len)
             }
             else if ((FT_REGULAR == entp->d_type) || (FT_SOCKET == entp->d_type) || (FT_USER == entp->d_type))
             {
-                file_read(entp->d_name, fopen_cb, buff, len);
+                rt_kprintf("[file_browser_open] File: %s\n", entp->d_name);
+                file_read(entp->d_name, f_ctx);
             }
             
         }
