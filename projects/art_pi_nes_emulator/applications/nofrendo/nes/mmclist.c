@@ -63,7 +63,7 @@ extern mapintf_t map99_intf;
 extern mapintf_t map231_intf;
 
 /* implemented mapper interfaces */
-const mapintf_t *mappers[] =
+mapintf_t *mappers[] =
 {
    &map0_intf,
    &map1_intf,

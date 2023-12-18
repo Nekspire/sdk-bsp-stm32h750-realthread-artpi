@@ -34,7 +34,7 @@ typedef struct fontchar_s
 
 typedef struct font_s
 {
-   const fontchar_t *character;
+   fontchar_t *character;
    uint8 height;
 } font_t;
 

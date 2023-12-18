@@ -37,8 +37,6 @@
 #include <log.h>
 #include <osd.h>
 
-extern char *osd_getromdata();
-
 /* Max length for displayed filename */
 #define  ROM_DISP_MAXLEN   20
 
@@ -60,15 +58,15 @@ extern char *osd_getromdata();
 #define  ROM_MIRRORTYPE    0x01
 #define  ROM_INES_MAGIC    "NES\x1A"
 
-//ToDo: packed - JD
+
 typedef struct inesheader_s
 {
-   uint8 ines_magic[4]    ;
-   uint8 rom_banks        ;
-   uint8 vrom_banks       ;
-   uint8 rom_type         ;
-   uint8 mapper_hinybble  ;
-   uint8 reserved[8]      ;
+   uint8 ines_magic[4]     __PACKED__;
+   uint8 rom_banks         __PACKED__;
+   uint8 vrom_banks        __PACKED__;
+   uint8 rom_type          __PACKED__;
+   uint8 mapper_hinybble   __PACKED__;
+   uint8 reserved[8]       __PACKED__;
 } inesheader_t;
 
 
@@ -145,27 +143,24 @@ static int rom_allocsram(rominfo_t *rominfo)
 }
 
 /* If there's a trainer, load it in at $7000 */
-static void rom_loadtrainer(unsigned char **rom, rominfo_t *rominfo)
+static void rom_loadtrainer(FILE *fp, rominfo_t *rominfo)
 {
-   ASSERT(rom);
+   ASSERT(fp);
    ASSERT(rominfo);
 
    if (rominfo->flags & ROM_FLAG_TRAINER)
    {
-//      fread(rominfo->sram + TRAINER_OFFSET, TRAINER_LENGTH, 1, fp);
-      memcpy(rominfo->sram + TRAINER_OFFSET, *rom, TRAINER_LENGTH);
-      rom+=TRAINER_LENGTH;
+      fread(rominfo->sram + TRAINER_OFFSET, TRAINER_LENGTH, 1, fp);
       log_printf("Read in trainer at $7000\n");
    }
 }
 
-static int rom_loadrom(unsigned char **rom, rominfo_t *rominfo)
+static int rom_loadrom(FILE *fp, rominfo_t *rominfo)
 {
-   ASSERT(rom);
+   ASSERT(fp);
    ASSERT(rominfo);
 
    /* Allocate ROM space, and load it up! */
-/*
    rominfo->rom = malloc((rominfo->rom_banks * ROM_BANK_LENGTH));
    if (NULL == rominfo->rom)
    {
@@ -173,15 +168,10 @@ static int rom_loadrom(unsigned char **rom, rominfo_t *rominfo)
       return -1;
    }
    _fread(rominfo->rom, ROM_BANK_LENGTH, rominfo->rom_banks, fp);
-*/
-   rominfo->rom=*rom;
-   *rom+=ROM_BANK_LENGTH*rominfo->rom_banks;
-
 
    /* If there's VROM, allocate and stuff it in */
    if (rominfo->vrom_banks)
    {
-/*
       rominfo->vrom = malloc((rominfo->vrom_banks * VROM_BANK_LENGTH));
       if (NULL == rominfo->vrom)
       {
@@ -189,10 +179,6 @@ static int rom_loadrom(unsigned char **rom, rominfo_t *rominfo)
          return -1;
       }
       _fread(rominfo->vrom, VROM_BANK_LENGTH, rominfo->vrom_banks, fp);
-*/
-      rominfo->vrom=*rom;
-      *rom+=VROM_BANK_LENGTH*rominfo->vrom_banks;
-
    }
    else
    {
@@ -323,22 +309,18 @@ int rom_checkmagic(const char *filename)
    return -1;
 }
 
-static int rom_getheader(unsigned char **rom, rominfo_t *rominfo)
+static int rom_getheader(FILE *fp, rominfo_t *rominfo)
 {
 #define  RESERVED_LENGTH   8
    inesheader_t head;
    uint8 reserved[RESERVED_LENGTH];
    bool header_dirty;
 
-   ASSERT(rom);
-   ASSERT(*rom);
+   ASSERT(fp);
    ASSERT(rominfo);
 
    /* Read in the header */
-//   _fread(&head, 1, sizeof(head), fp);
-	printf("Head: %p (%x %x %x %x)\n", *rom, (*rom)[0], (*rom)[1], (*rom)[2], (*rom)[3]);
-	memcpy(&head, *rom, sizeof(head));
-	*rom+=sizeof(head);
+   _fread(&head, 1, sizeof(head), fp);
 
    if (memcmp(head.ines_magic, ROM_INES_MAGIC, 4))
    {
@@ -438,7 +420,7 @@ char *rom_getinfo(rominfo_t *rominfo)
 /* Load a ROM image into memory */
 rominfo_t *rom_load(const char *filename)
 {
-   unsigned char *rom=(unsigned char*)osd_getromdata();
+   FILE *fp;
    rominfo_t *rominfo;
 
    rominfo = malloc(sizeof(rominfo_t));
@@ -447,8 +429,15 @@ rominfo_t *rom_load(const char *filename)
 
    memset(rominfo, 0, sizeof(rominfo_t));
 
+   fp = rom_findrom(filename, rominfo);
+
+   if (NULL == fp)
+      gui_sendmsg(GUI_RED, "%s not found, will use default ROM", filename);
+
    /* Get the header and stick it into rominfo struct */
-	if (rom_getheader(&rom, rominfo))
+   if (NULL == fp)
+      intro_get_header(rominfo);
+   else if (rom_getheader(fp, rominfo))
       goto _fail;
 
    /* Make sure we really support the mapper */
@@ -465,21 +454,33 @@ rominfo_t *rom_load(const char *filename)
    if (rom_allocsram(rominfo))
       goto _fail;
 
-      rom_loadtrainer(&rom, rominfo);
+   if (NULL != fp)
+      rom_loadtrainer(fp, rominfo);
 
-	if (rom_loadrom(&rom, rominfo))
+   if (NULL == fp)
+   {
+      if (intro_get_rom(rominfo))
+         goto _fail;
+   }
+   else if (rom_loadrom(fp, rominfo))
       goto _fail;
+
+   /* Close the file */
+   if (NULL != fp)
+      _fclose(fp);
 
    rom_loadsram(rominfo);
 
    /* See if there's a palette we can load up */
-//   rom_checkforpal(rominfo);
+   rom_checkforpal(rominfo);
 
    gui_sendmsg(GUI_GREEN, "ROM loaded: %s", rom_getinfo(rominfo));
 
    return rominfo;
 
 _fail:
+   if (NULL != fp)
+      _fclose(fp);
    rom_free(&rominfo);
    return NULL;
 }
