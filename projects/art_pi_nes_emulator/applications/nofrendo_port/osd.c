@@ -57,7 +57,7 @@ int osd_makesnapname(char *filename, int len)
 int osd_installtimer(int frequency, void *func, int funcsize, void *counter, int countersize)
 {
    static rt_timer_t timer;
-   double ideal = 1000 / frequency;
+   double ideal = ((double) 1000 ) / ((double) frequency);
    int interval = round(ideal);
 
    UNUSED(counter);
@@ -67,16 +67,16 @@ int osd_installtimer(int frequency, void *func, int funcsize, void *counter, int
    rt_kprintf("[osd_installtimer], timer frequency = %d\n", frequency);
    rt_kprintf("[osd_installtimer], interval = %d\n", interval);
 
-   // timer = rt_timer_create("osd_timer",
-   //                         NULL,
-   //                         NULL,
-   //                         interval,
-   //                         RT_TIMER_FLAG_SOFT_TIMER | RT_TIMER_FLAG_PERIODIC);
+   timer = rt_timer_create("osd_timer",
+                           func,
+                           RT_NULL,
+                           interval,
+                           RT_TIMER_FLAG_SOFT_TIMER | RT_TIMER_FLAG_PERIODIC);
    
-   // if (NULL != timer)
-   // {
-   //    rt_timer_start(timer);
-   // }
+   if (NULL != timer)
+   {
+      rt_timer_start(timer);
+   }
 
    return 0;
 }
@@ -94,8 +94,7 @@ void osd_getvideoinfo(vidinfo_t *info)
    info->default_width = DEFAULT_WIDTH;
    info->default_height = DEFAULT_HEIGHT;
 
-   viddriver_t vd = video_get_driver();
-   info->driver = &vd;
+   info->driver = video_get_driver();
 }
 
 /* Audio */
@@ -122,8 +121,11 @@ void osd_getinput(void)
 {
    event_t func_event;
 
-   int ev = input_joypad_get_event();
-   func_event(ev);
+   int code = input_joypad_get_event();
+   func_event = event_get(code);
+
+   if (func_event)
+      func_event(code);
 }
 
 

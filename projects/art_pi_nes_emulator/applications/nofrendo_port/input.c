@@ -42,6 +42,7 @@ static void lv_event_key_handler_cb(lv_event_cb_t *e)
          event_joypad = event_joypad1_start;
          break;
       default:
+         event_joypad = event_none;
          break;
       }
    }

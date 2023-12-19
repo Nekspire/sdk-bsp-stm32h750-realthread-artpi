@@ -87,7 +87,7 @@ static void custom_blit(bitmap_t *bmp, int num_dirties, rect_t *dirty_rects)
    emulator_ui_bitmap_draw(bmp);
 }
 
-viddriver_t video_get_driver(void)
+viddriver_t * video_get_driver()
 {
-   return vid_drv;
+   return &vid_drv;
 }

@@ -199,8 +199,12 @@ void main_insert(const char *filename, system_t type)
    main_eject();
 }
 
-int nofrendo_main(int argc, char *argv[])
+int nofrendo_main(const char* filename)
 {
+   char *argv[2];
+
+   argv[1] = filename;
+
    /* initialize our system structure */
    console.filename = NULL;
    console.nextfilename = NULL;
@@ -214,7 +218,7 @@ int nofrendo_main(int argc, char *argv[])
 
    event_init();
 
-   return osd_main(argc, argv);
+   return osd_main(0, argv);
 }
 
 /* This is the final leg of main() */

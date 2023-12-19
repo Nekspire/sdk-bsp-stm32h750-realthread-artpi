@@ -48,7 +48,7 @@ extern void main_insert(const char *filename, system_t type);
 extern void main_eject(void);
 extern void main_quit(void);
 
-int nofrendo_main(int argc, char *argv[]);
+int nofrendo_main(const char* filename);
 
 #endif /* !_NOFRENDO_H_ */
 

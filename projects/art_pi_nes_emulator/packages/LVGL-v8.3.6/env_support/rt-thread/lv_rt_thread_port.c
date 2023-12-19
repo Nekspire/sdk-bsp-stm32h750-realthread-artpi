@@ -77,7 +77,7 @@ static void f_open_cb()
         else
         {
             rt_kprintf("[f_open_cb] nofrendo started\n");
-            nofrendo_main(0, NULL);
+            nofrendo_main(NULL);
             rt_kprintf("[f_open_cb] nofrendo stopped\n");
         }
     }

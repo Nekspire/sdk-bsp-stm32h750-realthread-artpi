@@ -30,28 +30,13 @@ void emulator_ui_init(uint32_t w, uint32_t h)
 
 void emulator_ui_bitmap_draw(bitmap_t *bmp)
 {
-   // static uint32_t h = 0;
-
-   // for (size_t i = 0; i < defualt_width; i++)
-   // {
-   //    canvas_palette[i] = lv_color_make(
-   //       (uint8_t) (pal->r & 0xff),
-   //       (uint8_t) (pal->g & 0xff),
-   //       (uint8_t) (pal->b & 0xff));
-   // };
-   
-   lv_canvas_copy_buf(ui_canvas, bmp->data, 0, 0, bmp->width, bmp->height);
-
-   // (h < defualt_height) ? (h++) : (h = 0);
+   for (size_t i = 0; i < defualt_height; i++)
+   {
+      lv_canvas_copy_buf(ui_canvas, bmp->line[i], 0, i, defualt_width, 1);
+   };
 }
 
 void emulator_ui_bitmap_clear(uint8_t color)
 {
-   lv_color_t c;
-
-   c.ch.red = (color & 0b11111000) << 8;
-   c.ch.green = (color & 0b11111100) << 3;
-   c.ch.blue = color >> 3;
-
-   lv_canvas_fill_bg(ui_canvas, c, LV_OPA_100);
+   lv_canvas_fill_bg(ui_canvas, lv_color_black(), LV_OPA_100);
 }

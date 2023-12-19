@@ -8,6 +8,6 @@
 #define  DEFAULT_HEIGHT          NES_VISIBLE_HEIGHT
 #define  DEFAULT_PALETTE_SIZE    256
 
-viddriver_t video_get_driver(void);
+viddriver_t * video_get_driver();
 
 #endif
