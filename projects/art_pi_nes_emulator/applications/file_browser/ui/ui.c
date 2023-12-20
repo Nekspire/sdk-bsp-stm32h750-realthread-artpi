@@ -174,3 +174,8 @@ uint8_t ui_init(lv_indev_t *indevp, lv_event_cb_t *ep, lv_indev_type_t type)
 
     return ret;
 }
+
+void ui_clear_screen(void)
+{
+    lv_obj_clean(ui_screen);
+}

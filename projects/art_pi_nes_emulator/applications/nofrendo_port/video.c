@@ -9,7 +9,7 @@
 
 bitmap_t *bitmap_p;
 static char bitmap_buff[1]; // dummy
-uint16 palette[256];
+rgb_t palette[DEFAULT_WIDTH];
 
 static int init(int width, int height);
 static void shutdown(void);
@@ -56,10 +56,7 @@ static void shutdown(void)
 /* copy nes palette over to hardware */
 static void set_palette(rgb_t *pal)
 {
-   for (uint32_t i = 0; i < 256; i++)
-   {
-      palette[i] = (pal[i].b>>3)+((pal[i].g>>2)<<5)+((pal[i].r>>3)<<11);
-   }
+   memcpy(palette, pal, 256 * sizeof(rgb_t));
 }
 
 /* clear all frames to particular color */
@@ -84,7 +81,7 @@ static void free_write(int num_dirties, rect_t *dirty_rects)
 
 static void custom_blit(bitmap_t *bmp, int num_dirties, rect_t *dirty_rects)
 {
-   emulator_ui_bitmap_draw(bmp);
+   emulator_ui_bitmap_draw(bmp, palette);
 }
 
 viddriver_t * video_get_driver()

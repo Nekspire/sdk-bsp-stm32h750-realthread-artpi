@@ -196,6 +196,7 @@ static void file_read(char *file_name, file_browser_file_t *f_ctx)
                     
                     if (f_ctx->fopen_cb != NULL)
                     {
+                        ui_clear_screen();
                         f_ctx->fopen_cb();
                     }
                     else
@@ -366,9 +367,6 @@ DIR * file_browser_init(lv_indev_t *indevp, lv_indev_type_t type, lv_event_cb_t 
 { 
     static DIR *rootp;
 
-    /* Initialize file browser ui */
-    ui_init(indevp, eventp, type);
-
     /* Reserve memory for root path string */
     path_size += sizeof("/");
     pathp = (char *) malloc(path_size);
@@ -382,6 +380,8 @@ DIR * file_browser_init(lv_indev_t *indevp, lv_indev_type_t type, lv_event_cb_t 
 
         if (NULL != rootp)
         {
+            /* Initialize file browser ui */
+            ui_init(indevp, eventp, type);
             dir_read(rootp);
         }
         else

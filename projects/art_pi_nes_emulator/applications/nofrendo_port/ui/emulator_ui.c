@@ -1,42 +1,57 @@
 #include <emulator_ui.h>
 
-#include <bitmap.h>
+#include <video.h>
+#include <bitmap.h> 
 
-#define CANVAS_WIDTH 256 
-#define CANVAS_HEIGHT 224 
+lv_obj_t *ui_screen1;
+lv_obj_t *ui_image;
 
-uint32_t defualt_width = 0;
-uint32_t defualt_height = 0;
+uint8_t img_buf[DEFAULT_WIDTH * DEFAULT_HEIGHT * sizeof(lv_color_t)] = {0u};
 
-lv_obj_t *ui_canvas;
-lv_draw_img_dsc_t img_dsc;
-
-lv_color_t canvas_palette[CANVAS_WIDTH];
+static lv_img_dsc_t img_dsc = {
+  .header.always_zero = 0,
+  .header.w = DEFAULT_WIDTH,
+  .header.h = DEFAULT_HEIGHT,
+  .data_size = DEFAULT_WIDTH * DEFAULT_HEIGHT * sizeof(lv_color_t),
+  .header.cf = LV_IMG_CF_TRUE_COLOR,
+};
 
 void emulator_ui_init(uint32_t w, uint32_t h)
 {
-   static lv_color_t cbuf[LV_CANVAS_BUF_SIZE_TRUE_COLOR(CANVAS_WIDTH, CANVAS_HEIGHT)];
+   img_dsc.data = img_buf;
 
-   ui_canvas = lv_canvas_create(lv_scr_act());
+   ui_screen1 = lv_obj_create(NULL);
+   lv_scr_load(ui_screen1);
 
-   lv_canvas_set_buffer(ui_canvas, cbuf, CANVAS_WIDTH, CANVAS_HEIGHT, LV_IMG_CF_TRUE_COLOR);
-   lv_obj_center(ui_canvas);
-
-   lv_draw_img_dsc_init(&img_dsc);
-
-   defualt_width = w;
-   defualt_height = h;
+   ui_image = lv_img_create(ui_screen1);
+   lv_img_set_src(ui_image, &img_dsc);
+   lv_obj_set_size(ui_image, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+   lv_obj_center(ui_image);
 }
 
-void emulator_ui_bitmap_draw(bitmap_t *bmp)
+void emulator_ui_bitmap_draw(bitmap_t *bmp, rgb_t *palette)
 {
-   for (size_t i = 0; i < defualt_height; i++)
+   lv_color_t c;
+
+   if (RT_NULL != img_buf)
    {
-      lv_canvas_copy_buf(ui_canvas, bmp->line[i], 0, i, defualt_width, 1);
-   };
+      for (size_t i = 0; i < DEFAULT_HEIGHT; i++)
+      {
+         for (size_t j = 0; j < DEFAULT_WIDTH; j++)
+         {
+            c.ch.red = (uint16_t) palette[bmp->line[i][j]].r;
+            c.ch.green = (uint16_t) palette[bmp->line[i][j]].g;
+            c.ch.blue = (uint16_t) palette[bmp->line[i][j]].b;
+
+            lv_img_buf_set_px_color(&img_dsc, j , i, c);
+         }
+      }
+      lv_img_set_src(ui_image, &img_dsc);
+   }
 }
 
 void emulator_ui_bitmap_clear(uint8_t color)
 {
-   lv_canvas_fill_bg(ui_canvas, lv_color_black(), LV_OPA_100);
+   rt_memset(img_buf, 0x00, DEFAULT_WIDTH * DEFAULT_HEIGHT * sizeof(lv_color_t));
+   lv_img_set_src(ui_image, &img_dsc);
 }

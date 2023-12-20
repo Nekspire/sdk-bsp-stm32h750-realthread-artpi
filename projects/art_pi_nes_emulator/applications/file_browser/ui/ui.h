@@ -34,6 +34,7 @@ void ui_empty_dir_add_entity(void);
 void ui_dir_add_count(const char *txt);
 void ui_dir_focus_next(void);
 void ui_dir_focus_prev(void);
+void ui_clear_screen(void);
 
 #ifdef __cplusplus
 } /* extern "C" */
