@@ -152,23 +152,23 @@ static void file_read(char *file_name, file_browser_file_t *f_ctx)
 
     if (file_name != NULL)
     {
-        if (f_ctx->fopen_file_name != NULL)
+        if (f_ctx->fopen_path != NULL)
         {
-            free(f_ctx->fopen_file_name);
+            free(f_ctx->fopen_path);
         }
-        
-        f_ctx->fopen_file_name = (char *)malloc(strlen(file_name) + 1);
 
-        if (f_ctx->fopen_file_name != NULL)
+        path_add_file(file_name);
+        f_ctx->fopen_path = (char *)malloc(path_size);
+
+        if (f_ctx->fopen_path != NULL)
         {
-            memcpy(f_ctx->fopen_file_name, file_name, strlen(file_name) + 1);
+            memcpy(f_ctx->fopen_path, pathp, path_size);
         }
         else
         {
             rt_kprintf("[file_read] error: fopen_file_name NULL\n");
         }
 
-        path_add_file(file_name);
         ui_set_path(pathp);
         fd = open(pathp, O_RDONLY);
         rt_kprintf("[file_read] path: %s\n", pathp);
