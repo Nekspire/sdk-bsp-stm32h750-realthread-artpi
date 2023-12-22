@@ -12,7 +12,7 @@ static rt_thread_t emulator_thread = RT_NULL;
 static DIR *rootp;
 static file_browser_file_t fb_file;
 static uint8_t fb_file_buff[1024];
-static bool start_nofrendo = false;
+static volatile bool start_nofrendo = false;
 
 
 static void f_open_cb()

@@ -1,6 +1,8 @@
 #ifndef _EMULATOR_UI_H_
 #define _EMULATOR_UI_H_
 
+#define FULL_SCREEN  0
+
 #include <lvgl.h>
 #include <bitmap.h>
 

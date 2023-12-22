@@ -9,7 +9,7 @@
 
 bitmap_t *bitmap_p;
 static char bitmap_buff[1]; // dummy
-rgb_t palette[DEFAULT_WIDTH];
+rgb_t palette[DEFAULT_PALETTE_SIZE] = {0};
 
 static int init(int width, int height);
 static void shutdown(void);
@@ -56,7 +56,7 @@ static void shutdown(void)
 /* copy nes palette over to hardware */
 static void set_palette(rgb_t *pal)
 {
-   memcpy(palette, pal, 256 * sizeof(rgb_t));
+   memcpy(palette, pal, DEFAULT_PALETTE_SIZE * sizeof(rgb_t));
 }
 
 /* clear all frames to particular color */
