@@ -12,6 +12,7 @@
 #include <video.h>
 #include <input.h>
 #include <audio.h>
+#include <nesinput.h>
 
 char cfg_filename[] = "cfgfile";
 static void (*audio_callback)(void *buffer, int length) = NULL;
@@ -120,20 +121,38 @@ void osd_getmouse(int *x, int *y, int *button)
 void osd_getinput(void)
 {
    event_t func_event;
+   int new = event_none;
+   static int old = event_none;
+   int code = INP_STATE_BREAK;
 
-   int code = input_joypad_get_event();
-   func_event = event_get(code);
+   new = input_joypad_get_event();
+
+   if (new != event_none)
+   {
+      if (new != old)
+      {
+         old = new;
+      }
+      code = INP_STATE_MAKE;
+   }
+   
+   func_event = event_get(old);
 
    if (func_event)
       func_event(code);
 }
 
 
+static int logprint(const char *string)
+{
+   return rt_kprintf("%s", string);
+}
 
 int osd_init()
 {
    /* Link log function */
-   log_chain_logfunc(rt_kprintf);
+   log_chain_logfunc(logprint);
+   input_init();
 
    return 0;
 }

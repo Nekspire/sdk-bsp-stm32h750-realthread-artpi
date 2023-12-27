@@ -36,4 +36,5 @@ RTE/
 settings/
 *.uvguix*
 cmake-build-debug
+cmake-build-release
 .config.old

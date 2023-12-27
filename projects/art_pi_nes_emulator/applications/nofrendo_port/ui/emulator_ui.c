@@ -1,5 +1,4 @@
 #include <emulator_ui.h>
-
 #include <bitmap.h>
 #include <math.h>
 
