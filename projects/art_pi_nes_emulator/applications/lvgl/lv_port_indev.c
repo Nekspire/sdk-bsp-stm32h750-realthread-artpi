@@ -9,7 +9,7 @@ static void nes_controller_read_cb(lv_indev_drv_t *drv, lv_indev_data_t *data)
 {
     nes_controller_button_t button;
 
-    button = nes_match_button(i2c_bus);
+    button = nes_controller_get_button(i2c_bus);
 
     switch (button)
     {

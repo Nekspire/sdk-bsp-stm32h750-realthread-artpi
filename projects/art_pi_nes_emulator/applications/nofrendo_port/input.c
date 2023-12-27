@@ -5,49 +5,59 @@
 #include <event.h>
 #include <nes_controller.h>
 
-volatile int event_joypad = event_none;
-
 struct rt_i2c_bus_device *i2c_bus1;
+
+enum
+{
+   INP_STATE_BREAK,
+   INP_STATE_MAKE
+};
 
 void input_init()
 {
    i2c_bus1 = (struct rt_i2c_bus_device *)rt_device_find("i2c4");
 }
 
-int input_joypad_get_event(void)
+void input_joypad_get_event(void)
 {
-   nes_controller_button_t key = nes_match_button(i2c_bus1);
+   uint8_t button;
+   uint8_t b;
+   event_t func_event;
 
-   switch (key)
+   const int ev[] = 
    {
-   case NES_CONTROLLER_BUTTON_A:
-      event_joypad = event_joypad1_a;
-      break;
-   case NES_CONTROLLER_BUTTON_B:
-      event_joypad = event_joypad1_b;
-      break;
-   case NES_CONTROLLER_BUTTON_DOWN:
-      event_joypad = event_joypad1_down;
-      break;
-   case NES_CONTROLLER_BUTTON_UP:
-      event_joypad = event_joypad1_up;
-      break;
-   case NES_CONTROLLER_BUTTON_LEFT:
-      event_joypad = event_joypad1_left;
-      break;
-   case NES_CONTROLLER_BUTTON_RIGHT:
-      event_joypad = event_joypad1_right;
-      break;
-   case NES_CONTROLLER_BUTTON_SELECT:
-      event_joypad = event_joypad1_select;
-      break;
-   case NES_CONTROLLER_BUTTON_START:
-      event_joypad = event_joypad1_start;
-      break;
-   default:
-      event_joypad = event_none;
-      break;
-   }
+      event_joypad1_up, event_joypad1_left,
+      event_joypad1_a, event_joypad1_b,
+      event_joypad1_start, event_joypad1_select,
+      event_joypad1_down, event_joypad1_right
+   };
 
-   return event_joypad;
+   button = nes_controller_get_buttons(i2c_bus1);
+
+   if (button != NES_CONTROLLER_BUTTON_NONE)
+   {
+      for (size_t i = 0; i < NES_CONTROLLER_BUTTON_COUNT; i++)
+      {
+         b = button & (1u << i);
+
+         if (b != 0)
+         {
+            func_event = event_get(ev[i]);
+            if (func_event) func_event(INP_STATE_MAKE);
+         }
+         else
+         {
+            func_event = event_get(ev[i]);
+            if (func_event) func_event(INP_STATE_BREAK);
+         }
+      }
+   }
+   else
+   {
+      for (size_t i = 0; i < NES_CONTROLLER_BUTTON_COUNT; i++)
+      {
+         func_event = event_get(ev[i]);
+         if (func_event) func_event(INP_STATE_BREAK);
+      }
+   }
 }

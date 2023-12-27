@@ -120,26 +120,7 @@ void osd_getmouse(int *x, int *y, int *button)
 
 void osd_getinput(void)
 {
-   event_t func_event;
-   int new = event_none;
-   static int old = event_none;
-   int code = INP_STATE_BREAK;
-
-   new = input_joypad_get_event();
-
-   if (new != event_none)
-   {
-      if (new != old)
-      {
-         old = new;
-      }
-      code = INP_STATE_MAKE;
-   }
-   
-   func_event = event_get(old);
-
-   if (func_event)
-      func_event(code);
+   input_joypad_get_event();
 }
 
 

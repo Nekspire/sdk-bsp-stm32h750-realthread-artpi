@@ -6,7 +6,7 @@
 
 #define THREAD_PRIORITY 24
 #define THREAD_STACK_SIZE 120000
-#define THREAD_TIMESLICE 5
+#define THREAD_TIMESLICE 1
 
 static rt_thread_t emulator_thread = RT_NULL;
 static DIR *rootp;

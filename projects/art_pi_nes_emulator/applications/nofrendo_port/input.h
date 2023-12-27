@@ -5,7 +5,7 @@
 
 extern void input_lv_event_key_handler_cb(lv_event_cb_t *e);
 
-int input_joypad_get_event(void);
+void input_joypad_get_event(void);
 void input_init();
 
 #endif
